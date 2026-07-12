@@ -1,8 +1,8 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { Colors, Radius, Spacing, Type } from '@/constants/theme';
 import { FeatureScore } from '@/types/analysis';
+import { Ionicons } from '@expo/vector-icons';
+import React from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 
 export function SectionHeader({
   title,
@@ -36,13 +36,15 @@ export function StatCard({
   );
 }
 
-function fmt(n: number) {
+function fmt(n: number | null | undefined) {
+  if (n === null || n === undefined) return '-';
   if (n === 0) return '0';
   if (Math.abs(n) < 0.001) return n.toExponential(1);
   return n.toFixed(3).replace(/0+$/, '').replace(/\.$/, '');
 }
 
-export function BenfordTable({ rows }: { rows: FeatureScore[] }) {
+export function BenfordTable({ rows = [] }: { rows?: FeatureScore[] }) {
+  console.log('[BenfordTable] received rows:', JSON.stringify(rows, null, 2));
   return (
     <View style={styles.table}>
       <View style={[styles.tRow, styles.tHead]}>
@@ -60,7 +62,9 @@ export function BenfordTable({ rows }: { rows: FeatureScore[] }) {
           <Text style={styles.tCell}>{fmt(r.mad)}</Text>
           <Text style={styles.tCell}>{fmt(r.kl)}</Text>
           <Text style={styles.tCell}>{fmt(r.js)}</Text>
-          <Text style={styles.tCell}>{Math.round(r.chi2)}</Text>
+          <Text style={styles.tCell}>
+            {r.chi2 !== undefined && r.chi2 !== null ? Math.round(r.chi2) : '-'}
+          </Text>
         </View>
       ))}
     </View>
@@ -91,17 +95,18 @@ const styles = StyleSheet.create({
     borderRadius: Radius.md,
     borderWidth: 1,
     borderColor: Colors.border,
-    paddingVertical: Spacing.md,
+    paddingVertical: 14,
     alignItems: 'center',
   },
-  statValue: { fontSize: 18, ...Type.displaySemi },
-  statLabel: { fontSize: 11, color: Colors.inkMuted, marginTop: 4, ...Type.bodyMedium },
+  statValue: { fontSize: 21, ...Type.displaySemi },
+  statLabel: { fontSize: 11.5, color: Colors.inkMuted, marginTop: 4, ...Type.bodyMedium },
 
   table: {
     borderRadius: Radius.md,
     borderWidth: 1,
     borderColor: Colors.border,
     overflow: 'hidden',
+    width: '100%',
   },
   tRow: { flexDirection: 'row', paddingVertical: 10, paddingHorizontal: Spacing.md },
   tRowAlt: { backgroundColor: Colors.surfaceAlt },

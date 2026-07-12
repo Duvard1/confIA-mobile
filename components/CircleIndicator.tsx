@@ -12,7 +12,7 @@ interface CircleIndicatorProps {
 export default function CircleIndicator({ label, value, color }: CircleIndicatorProps) {
   return (
     <View style={styles.wrap}>
-      <GaugeRing size={84} strokeWidth={9} progress={value} color={color}>
+      <GaugeRing size={94} strokeWidth={10} progress={value} color={color}>
         <Text style={[styles.value, { color }]}>{Math.round(value)}%</Text>
       </GaugeRing>
       <Text style={styles.label}>{label}</Text>
@@ -22,6 +22,6 @@ export default function CircleIndicator({ label, value, color }: CircleIndicator
 
 const styles = StyleSheet.create({
   wrap: { alignItems: 'center', flex: 1 },
-  value: { fontSize: 17, ...Type.displaySemi },
-  label: { marginTop: 8, fontSize: 13, color: Colors.inkMuted, ...Type.bodyMedium },
+  value: { fontSize: 19, ...Type.displaySemi },
+  label: { marginTop: 8, fontSize: 13.5, color: Colors.inkMuted, ...Type.bodyMedium },
 });

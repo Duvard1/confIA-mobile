@@ -28,7 +28,7 @@ export interface FeatureScore {
   mad: number;
   kl: number;
   js: number;
-  chi2: number;
+  chi2?: number;
 }
 
 export interface AnalysisData {
@@ -49,6 +49,7 @@ export interface AnalysisData {
     channels: number;
     format: string;
     description?: string;
+    contact_type?: string;
   };
   transcription: {
     language: string;
@@ -105,6 +106,7 @@ export interface AnalysisData {
     feature_scores: FeatureScore[];
     timeline: any[];
   };
+  local_predict?: any;
 }
 
 export interface AnalyzeResponse {

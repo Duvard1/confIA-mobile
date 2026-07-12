@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -14,7 +14,7 @@ import { router } from 'expo-router';
 import * as DocumentPicker from 'expo-document-picker';
 import { Audio } from 'expo-av';
 import { useAuth } from '@clerk/clerk-expo';
-import { PrimaryButton } from '@/components/Buttons';
+import { PrimaryButton, SecondaryButton } from '@/components/Buttons';
 import { UploadZone, FileCard } from '@/components/UploadZone';
 import { useAnalysisStore } from '@/store/useAnalysisStore';
 import { analyzeCall, ApiError } from '@/services/api';
@@ -50,6 +50,7 @@ export default function InicioScreen() {
   } = useAnalysisStore();
 
   const [analyzing, setAnalyzing] = useState(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const pickFile = async () => {
     const result = await DocumentPicker.getDocumentAsync({
@@ -85,7 +86,11 @@ export default function InicioScreen() {
       return;
     }
     setAnalyzing(true);
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     try {
+      // Enviar a la API principal (que ahora internamente llamará a la API local de predicción)
       const { data } = await analyzeCall({
         fileUri: pendingFile.uri,
         fileName: pendingFile.name,
@@ -93,16 +98,31 @@ export default function InicioScreen() {
         callerType: callerType ?? undefined,
         description: description || undefined,
         userId: userId ?? undefined,
+        signal: controller.signal,
       });
+
       setCurrentAnalysis(data, pendingFile.name);
       resetUploadForm();
       router.push('/result');
-    } catch (err) {
+    } catch (err: any) {
+      if (err.name === 'AbortError' || controller.signal.aborted) {
+        console.log('[onAnalyze] Análisis cancelado por el usuario.');
+        return;
+      }
       const message =
         err instanceof ApiError ? err.message : 'Ocurrió un error inesperado durante el análisis.';
       Alert.alert('No se pudo analizar el audio', message);
     } finally {
       setAnalyzing(false);
+      abortControllerRef.current = null;
+    }
+  };
+
+  const onCancelAnalyze = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      setAnalyzing(false);
+      Alert.alert('Análisis cancelado', 'El análisis del audio fue cancelado.');
     }
   };
 
@@ -157,13 +177,27 @@ export default function InicioScreen() {
           style={styles.textArea}
         />
 
-        <PrimaryButton
-          label={analyzing ? 'Analizando...' : 'Analizar audio'}
-          icon={analyzing ? undefined : 'sparkles-outline'}
-          loading={analyzing}
-          onPress={onAnalyze}
-          style={{ marginTop: Spacing.lg }}
-        />
+        {analyzing ? (
+          <View style={{ gap: 8, marginTop: Spacing.lg }}>
+            <PrimaryButton
+              label="Analizando..."
+              loading={true}
+              onPress={() => {}}
+            />
+            <SecondaryButton
+              label="Cancelar análisis"
+              icon="close-circle-outline"
+              onPress={onCancelAnalyze}
+            />
+          </View>
+        ) : (
+          <PrimaryButton
+            label="Analizar audio"
+            icon="sparkles-outline"
+            onPress={onAnalyze}
+            style={{ marginTop: Spacing.lg }}
+          />
+        )}
       </ScrollView>
     </KeyboardAvoidingView>
   );

@@ -65,7 +65,7 @@ export default function ResultScreen() {
             color={Colors.danger}
           />
           <CircleIndicator
-            label="Voz IA"
+            label="Voz IA (Benford)"
             value={dashboard.gauges.ai_voice}
             color={Colors.success}
           />

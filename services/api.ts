@@ -1,5 +1,5 @@
+import { AnalyzeResponse, CallerType, HistoryEntry } from '@/types/analysis';
 import { Platform } from 'react-native';
-import { AnalyzeResponse, CallerType } from '@/types/analysis';
 
 // Set EXPO_PUBLIC_API_URL in a .env file to override.
 export const API_BASE_URL =
@@ -22,7 +22,10 @@ interface AnalyzeParams {
   callerType?: CallerType;
   description?: string;
   userId?: string;
+  signal?: AbortSignal;
 }
+
+
 
 /**
  * Uploads a recorded call to the ConfIA backend and returns the full
@@ -35,6 +38,7 @@ export async function analyzeCall({
   callerType,
   description,
   userId,
+  signal,
 }: AnalyzeParams): Promise<AnalyzeResponse> {
   console.log('[analyzeCall] Iniciando análisis de llamada con parámetros:', {
     fileUri,
@@ -78,7 +82,18 @@ export async function analyzeCall({
     form.append('audio', fileData);
   }
 
-  if (callerType) form.append('caller_type', callerType);
+  if (callerType) {
+    const contactTypeMap: Record<string, string> = {
+      Familiar: 'family',
+      Amigo: 'friend',
+      Empresa: 'company',
+      Desconocido: 'unknown',
+    };
+    const contactType = contactTypeMap[callerType];
+    if (contactType) {
+      form.append('contact_type', contactType);
+    }
+  }
   if (description) form.append('description', description);
   if (userId) form.append('user_id', userId);
 
@@ -93,6 +108,7 @@ export async function analyzeCall({
         // NOTE: do not set Content-Type manually — RN sets the multipart
         // boundary automatically when the body is a FormData instance.
       },
+      signal,
     });
     console.log('[analyzeCall] Respuesta HTTP recibida:', {
       status: response.status,
@@ -131,6 +147,63 @@ export async function analyzeCall({
   const json = (await response.json()) as AnalyzeResponse;
   if (!json?.success || !json?.data) {
     throw new ApiError('La respuesta del análisis no tiene el formato esperado.');
+  }
+  return json;
+}
+
+export interface HistoryResponse {
+  success: boolean;
+  data: HistoryEntry[];
+}
+
+/**
+ * Obtiene el historial de análisis guardado en la base de datos para el usuario actual.
+ */
+export async function fetchUserHistory(userId: string): Promise<HistoryResponse> {
+  console.log('[fetchUserHistory] Obteniendo historial para el usuario:', userId);
+  const endpoint = `${API_BASE_URL}/api/v1/history?user_id=${encodeURIComponent(userId)}`;
+
+  let response: Response;
+  try {
+    response = await fetch(endpoint, {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json',
+      },
+    });
+    console.log('[fetchUserHistory] Respuesta HTTP recibida:', {
+      status: response.status,
+      statusText: response.statusText,
+    });
+  } catch (err) {
+    console.error('[fetchUserHistory] Error de red al consultar historial:', err);
+    throw new ApiError(
+      'No se pudo conectar con el servidor para obtener el historial. Revisa tu conexión.'
+    );
+  }
+
+  if (!response.ok) {
+    let message = `El servidor respondió con un error (${response.status}).`;
+    try {
+      const body = await response.json();
+      if (body?.detail) {
+        if (typeof body.detail === 'string') {
+          message = body.detail;
+        } else if (Array.isArray(body.detail)) {
+          message = body.detail.map((e: any) => `${e.loc?.join('.')}: ${e.msg}`).join('\n');
+        }
+      } else if (body?.message) {
+        message = body.message;
+      }
+    } catch {
+      // ignorar error de parseo
+    }
+    throw new ApiError(message, response.status);
+  }
+
+  const json = (await response.json()) as HistoryResponse;
+  if (!json?.success || !json?.data) {
+    throw new ApiError('La respuesta del historial no tiene el formato esperado.');
   }
   return json;
 }

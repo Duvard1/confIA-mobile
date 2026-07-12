@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import RadarChart from './RadarChart';
-import BenfordBarChart from './BenfordBarChart';
-import { SectionHeader, StatCard, BenfordTable, InfoRow } from './Misc';
-import { AnalysisData } from '@/types/analysis';
 import { Colors, Radius, Shadow, Spacing, Type, riskColor } from '@/constants/theme';
+import { AnalysisData } from '@/types/analysis';
+import { Ionicons } from '@expo/vector-icons';
+import React, { useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import BenfordBarChart from './BenfordBarChart';
+import GaugeRing from './GaugeRing';
+import { BenfordTable, InfoRow, SectionHeader, StatCard } from './Misc';
+import RadarChart from './RadarChart';
 
 const BENFORD_LABELS: Record<string, string> = {
   rms: 'RMS (energía)',
@@ -15,6 +16,16 @@ const BENFORD_LABELS: Record<string, string> = {
   jitter: 'Jitter',
   shimmer: 'Shimmer',
   fft: 'FFT (espectro)',
+};
+
+const BENFORD_DESCRIPTIONS: Record<string, string> = {
+  rms: 'Mide la intensidad o energía del audio. Cambios bruscos pueden delatar manipulación.',
+  pitch: 'Mide la entonación de la voz (agudo/grave). Las voces artificiales suelen ser más monótonas.',
+  zcr: 'Mide la rapidez del cambio de señal. Ayuda a distinguir ruido de voz natural.',
+  silences: 'Analiza las pausas en el habla. Las IA suelen hacer silencios inusualmente perfectos.',
+  jitter: 'Mide la inestabilidad en el tono. Las voces reales tienen vibraciones naturales que las IA no imitan bien.',
+  shimmer: 'Mide la inestabilidad en el volumen. La falta de variaciones de volumen delata una voz sintética.',
+  fft: 'Analiza las frecuencias del audio. Permite identificar anomalías espectrales imperceptibles al oído.',
 };
 
 export default function DashboardContent({ data }: { data: AnalysisData }) {
@@ -31,15 +42,66 @@ export default function DashboardContent({ data }: { data: AnalysisData }) {
 
   const activeBenford = activeFeature ? dashboard.benford[activeFeature] : null;
 
+  const localPredict = data.local_predict;
+  const hasLocalPredict = !!localPredict && (localPredict.prediccion !== undefined || localPredict.score_riesgo !== undefined);
+  const localPredictScore = localPredict?.score_riesgo ?? localPredict?.evidencia_neuronal?.score_fake_pct ?? 0;
+  const localPredictConfidence = localPredict?.nivel_confianza;
+  const localPredictModel = localPredict?.evidencia_neuronal?.nombre_modelo || 'XLS-R-SLS-Llamadas';
+
+  const getRiskColor = (score: number) => {
+    if (score >= 70) return Colors.danger;
+    if (score >= 40) return Colors.warning;
+    return Colors.success;
+  };
+
+  console.log('[DashboardContent] dashboard.feature_scores:', JSON.stringify(dashboard?.feature_scores, null, 2));
+
   return (
     <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       <Text style={styles.eyebrow}>Análisis forense</Text>
       <Text style={styles.title}>Dashboard técnico</Text>
 
+      {/* Indicador principal y centrado: API local (clonación de voz) */}
+      <View style={styles.mainIndicatorCard}>
+        <SectionHeader title="Detección de Clonación de Voz (Modelo SLS)" icon="mic-outline" />
+        {hasLocalPredict ? (
+          <View style={styles.mainIndicatorContent}>
+            <GaugeRing
+              size={160}
+              strokeWidth={15}
+              progress={localPredictScore}
+              color={getRiskColor(localPredictScore)}
+              gradient={true}
+            >
+              <View style={{ alignItems: 'center' }}>
+                <Text style={styles.mainValueText}>{Math.round(localPredictScore)}%</Text>
+                <Text style={styles.mainLabelText} numberOfLines={2}>
+                  {localPredictConfidence}
+                </Text>
+              </View>
+            </GaugeRing>
+            <View style={styles.mainMetaInfo}>
+              <Text style={styles.mainMetaLabel}>Modelo:</Text>
+              <Text style={styles.mainMetaValue}>{localPredictModel}</Text>
+            </View>
+          </View>
+        ) : (
+          <View style={styles.localApiOffline}>
+            <Ionicons name="warning-outline" size={24} color={Colors.warning} />
+            <Text style={styles.offlineText}>
+              API local de clonación de voz no detectada o desconectada.
+            </Text>
+            <Text style={styles.offlineSubtext}>
+              Asegúrate de correr el servicio en: http://localhost:8000
+            </Text>
+          </View>
+        )}
+      </View>
+
       <View style={styles.statsRow}>
         <StatCard label="Riesgo" value={`${overall_assessment.risk_score}%`} color={riskColor(overall_assessment.risk_level)} />
         <StatCard label="Fraude" value={`${Math.round(dashboard.gauges.fraud)}%`} color={Colors.danger} />
-        <StatCard label="Voz IA" value={`${Math.round(dashboard.gauges.ai_voice)}%`} color={Colors.success} />
+        <StatCard label="Voz IA" value={`${Math.round(dashboard.gauges.ai_voice)}%`} color={getRiskColor(dashboard.gauges.ai_voice)} />
         <StatCard label="Tiempo" value={`${(metadata.processing_time_ms / 1000).toFixed(1)}s`} color={Colors.navy} />
       </View>
 
@@ -75,9 +137,13 @@ export default function DashboardContent({ data }: { data: AnalysisData }) {
           />
         ) : null}
         <Text style={styles.caption}>
-          {BENFORD_LABELS[activeFeature] || activeFeature} — distribución del primer dígito
-          frente a la ley de Benford. Mayor desviación puede indicar procesamiento artificial.
+          {BENFORD_LABELS[activeFeature] || activeFeature} — distribución del primer dígito frente a la ley de Benford.
         </Text>
+        {BENFORD_DESCRIPTIONS[activeFeature] && (
+          <Text style={styles.descText}>
+            {BENFORD_DESCRIPTIONS[activeFeature]}
+          </Text>
+        )}
       </View>
 
       <View style={styles.card}>
@@ -89,13 +155,6 @@ export default function DashboardContent({ data }: { data: AnalysisData }) {
         <SectionHeader title="Información del audio" icon="document-text-outline" />
         <InfoRow label="Nombre" value={audio.original_name} />
         <InfoRow label="Duración" value={`${Math.round(audio.duration_seconds)}s`} />
-        <InfoRow label="Idioma" value={transcription.language} />
-        <InfoRow
-          label="Confianza de transcripción"
-          value={`${Math.round(transcription.confidence * 100)}%`}
-        />
-        <InfoRow label="Modelo LLM" value={metadata.models.llm} />
-        <InfoRow label="Modelo de transcripción" value={metadata.models.transcription} />
         <InfoRow
           label="Tiempo de procesamiento"
           value={`${(metadata.processing_time_ms / 1000).toFixed(2)} s`}
@@ -164,6 +223,16 @@ const styles = StyleSheet.create({
     width: '100%',
     ...Type.body,
   },
+  descText: {
+    fontSize: 12,
+    color: Colors.ink,
+    textAlign: 'center',
+    marginTop: 6,
+    lineHeight: 17,
+    width: '100%',
+    fontStyle: 'italic',
+    ...Type.body,
+  },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: Spacing.xl },
   emptyTitle: { fontSize: 16, color: Colors.navy, marginTop: Spacing.md, ...Type.bodySemi },
   emptyText: {
@@ -172,6 +241,71 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 6,
     lineHeight: 19,
+    ...Type.body,
+  },
+  mainIndicatorCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.lg,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    padding: Spacing.lg,
+    marginBottom: Spacing.lg,
+    alignItems: 'center',
+    width: '100%',
+    ...Shadow.card,
+  },
+  mainIndicatorContent: {
+    alignItems: 'center',
+    marginTop: 8,
+    width: '100%',
+  },
+  mainValueText: {
+    fontSize: 32,
+    color: Colors.navy,
+    ...Type.display,
+  },
+  mainLabelText: {
+    fontSize: 11.5,
+    color: Colors.inkMuted,
+    marginTop: 2,
+    textAlign: 'center',
+    paddingHorizontal: 8,
+    lineHeight: 15,
+    ...Type.bodySemi,
+  },
+  mainMetaInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: Spacing.lg,
+  },
+  mainMetaLabel: {
+    fontSize: 12,
+    color: Colors.inkMuted,
+    ...Type.body,
+  },
+  mainMetaValue: {
+    fontSize: 12,
+    color: Colors.navy,
+    ...Type.bodySemi,
+  },
+  localApiOffline: {
+    alignItems: 'center',
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.sm,
+  },
+  offlineText: {
+    fontSize: 13.5,
+    color: Colors.ink,
+    textAlign: 'center',
+    marginTop: 8,
+    ...Type.bodySemi,
+  },
+  offlineSubtext: {
+    fontSize: 11,
+    color: Colors.inkMuted,
+    textAlign: 'center',
+    marginTop: 4,
     ...Type.body,
   },
 });

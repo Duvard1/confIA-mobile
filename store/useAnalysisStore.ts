@@ -23,6 +23,7 @@ interface AnalysisStore {
   resetUploadForm: () => void;
 
   setCurrentAnalysis: (data: AnalysisData, fileName: string) => void;
+  setHistory: (history: HistoryEntry[]) => void;
 }
 
 export const useAnalysisStore = create<AnalysisStore>((set, get) => ({
@@ -53,4 +54,5 @@ export const useAnalysisStore = create<AnalysisStore>((set, get) => ({
       history: [entry, ...get().history.filter((h) => h.id !== entry.id)],
     });
   },
+  setHistory: (h) => set({ history: h }),
 }));
