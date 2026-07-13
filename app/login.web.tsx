@@ -21,7 +21,6 @@ export default function LoginScreen() {
   const { signIn, isLoaded: signInLoaded } = useSignIn();
   const { signUp, isLoaded: signUpLoaded } = useSignUp();
 
-  // Si ya hay sesión activa, ir directo a las tabs.
   useEffect(() => {
     if (authLoaded && isSignedIn) {
       router.replace('/(tabs)');
@@ -31,7 +30,6 @@ export default function LoginScreen() {
   const onGooglePress = async () => {
     if (!CLERK_ENABLED) return;
 
-    // Si ya está autenticado, simplemente navegar.
     if (isSignedIn) {
       router.replace('/(tabs)');
       return;
@@ -43,14 +41,12 @@ export default function LoginScreen() {
     }
 
     try {
-      // Intentar sign in primero (usuario existente).
       await signIn.authenticateWithRedirect({
         strategy: 'oauth_google',
         redirectUrl: `${window.location.origin}/sso-callback`,
         redirectUrlComplete: `${window.location.origin}/(tabs)`,
       });
     } catch (err: any) {
-      // Si el error es porque el usuario no existe, intentar sign up.
       const isNotFound = err?.errors?.some(
         (e: any) => e.code === 'form_identifier_not_found'
       );

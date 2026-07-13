@@ -19,10 +19,8 @@ const CLERK_ENABLED = !!process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
 export default function LoginScreen() {
   const { isSignedIn, isLoaded } = useAuth();
-  // useOAuth usa deep links nativos; solo funciona en iOS/Android.
   const { startOAuthFlow } = useOAuth({ strategy: 'oauth_google' });
 
-  // Si ya hay sesión activa, ir directo a las tabs.
   useEffect(() => {
     if (isLoaded && isSignedIn) {
       router.replace('/(tabs)');
@@ -31,11 +29,9 @@ export default function LoginScreen() {
 
   const onGooglePress = useCallback(async () => {
     if (!CLERK_ENABLED) {
-      // Modo vista previa sin clave Clerk
       router.replace('/(tabs)');
       return;
     }
-    // Si ya está autenticado, simplemente navegar.
     if (isSignedIn) {
       router.replace('/(tabs)');
       return;

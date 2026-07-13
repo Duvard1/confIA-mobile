@@ -15,11 +15,9 @@ export default function SSOCallback() {
 
   useEffect(() => {
     if (!isLoaded) return;
-    // Una vez que Clerk procesó el callback y actualizó el estado, navegamos.
     if (isSignedIn) {
       router.replace('/(tabs)');
     } else {
-      // Si algo salió mal, volvemos al login.
       router.replace('/login');
     }
   }, [isLoaded, isSignedIn]);
