@@ -120,7 +120,7 @@ export function DashboardEmptyState() {
 const styles = StyleSheet.create({
   content: { padding: Spacing.xl, paddingBottom: Spacing.xxl },
   eyebrow: {
-    fontSize: 12,
+    fontSize: 15,
     color: Colors.signalDeep,
     letterSpacing: 1,
     textTransform: 'uppercase',

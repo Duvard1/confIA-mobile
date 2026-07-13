@@ -2,6 +2,7 @@
  * login.tsx — Flujo OAuth para iOS / Android.
  * En web, Metro carga login.web.tsx en su lugar.
  */
+import { Image } from 'react-native';
 import Background from '@/components/BackgroundAuth';
 import { PrimaryButton, SecondaryButton } from '@/components/Buttons';
 import Logo from '@/components/Logo';
@@ -65,8 +66,18 @@ export default function LoginScreen() {
       <View style={{ flex: 1 }} />
 
       <View style={styles.header}>
-        <Logo size={64} />
-        <Text style={styles.title}>Bienvenido a ConfIA</Text>
+        <Image
+  source={require('@/assets/images/logo.png')}
+  style={{
+    width: 210,
+    height: 210,
+    resizeMode: 'contain',
+  }}
+/>
+        <Text style={styles.title}>
+  Bienvenido a{"\n"}
+  Guard<Text style={styles.ia}>IA</Text>n
+</Text>
         <Text style={styles.subtitle}>
           Protege tus llamadas frente a fraudes e inteligencia artificial.
         </Text>
@@ -105,6 +116,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.xl,
     paddingBottom: Spacing.xxl,
   },
+  ia: {
+  color: '#FF4040',
+  textShadowColor: '#FF1744',
+  textShadowOffset: { width: 0, height: 0 },
+  textShadowRadius: 16,
+},
   header: { alignItems: 'center' },
   title: {
     fontSize: 24,

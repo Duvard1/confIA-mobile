@@ -1,14 +1,20 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated, Easing } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Animated,
+  Easing,
+  Image,
+} from 'react-native';
 import { router } from 'expo-router';
-import Logo from '@/components/Logo';
 import { Colors, Type } from '@/constants/theme';
 import BackgroundAuth from '@/components/BackgroundAuth';
 
 export default function SplashScreen() {
   const fade = useRef(new Animated.Value(0)).current;
   const rise = useRef(new Animated.Value(12)).current;
-  const ringPulse = useRef(new Animated.Value(1)).current;
+  const logoPulse = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     Animated.parallel([
@@ -18,6 +24,7 @@ export default function SplashScreen() {
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }),
+
       Animated.timing(rise, {
         toValue: 0,
         duration: 650,
@@ -26,98 +33,141 @@ export default function SplashScreen() {
       }),
     ]).start();
 
-    Animated.loop(
+    const pulseAnimation = Animated.loop(
       Animated.sequence([
-        Animated.timing(ringPulse, {
-          toValue: 1.06,
+        Animated.timing(logoPulse, {
+          toValue: 1.05,
           duration: 1200,
           easing: Easing.inOut(Easing.sin),
           useNativeDriver: true,
         }),
-        Animated.timing(ringPulse, {
+
+        Animated.timing(logoPulse, {
           toValue: 1,
           duration: 1200,
           easing: Easing.inOut(Easing.sin),
           useNativeDriver: true,
         }),
-      ])
-    ).start();
+      ]),
+    );
 
-    const t = setTimeout(() => {
+    pulseAnimation.start();
+
+    const timer = setTimeout(() => {
       router.replace('/login');
     }, 1800);
-    return () => clearTimeout(t);
-  }, []);
+
+    return () => {
+      clearTimeout(timer);
+      pulseAnimation.stop();
+    };
+  }, [fade, rise, logoPulse]);
 
   return (
-  <BackgroundAuth>
-    <View
-      style={{
-        flex: 1,
-        alignItems: 'center',
-      }}
-    >
-      <View style={{ flex: 1 }} />
+    <BackgroundAuth>
+      <View style={styles.container}>
+        <View style={styles.spacer} />
 
-      <Animated.View
-        style={{
-          opacity: fade,
-          transform: [{ translateY: rise }, { scale: ringPulse }],
-          alignItems: 'center',
-        }}
-      >
-        <Logo size={92} />
+        <Animated.View
+          style={[
+            styles.content,
+            {
+              opacity: fade,
+              transform: [
+                { translateY: rise },
+                { scale: logoPulse },
+              ],
+            },
+          ]}
+        >
+          <Image
+            source={require('@/assets/images/logo.png')}
+            style={styles.logo}
+          />
 
-        <Text style={styles.title}>
-  Guard<Text style={styles.titleIA}>IA</Text>n
-</Text>
+          <Text style={styles.title}>
+            Guard<Text style={styles.titleIA}>IA</Text>n
+          </Text>
 
-        <Text style={styles.subtitle}>
-          Analiza llamadas. Detecta riesgos.{'\n'}
-          Decide con confianza.
-        </Text>
-      </Animated.View>
+          <Text style={styles.subtitle}>
+            Analiza llamadas. Detecta riesgos.{'\n'}
+            Decide con confianza.
+          </Text>
+        </Animated.View>
 
-      <View
-        style={{
-          flex: 1,
-          justifyContent: 'flex-end',
-          paddingBottom: 40,
-        }}
-      >
-        <Animated.Text style={[styles.powered, { opacity: fade }]}>
-          Powered by AI
-        </Animated.Text>
+        <View style={styles.footer}>
+          <Animated.Text
+            style={[
+              styles.powered,
+              {
+                opacity: fade,
+              },
+            ]}
+          >
+            Powered by AI
+          </Animated.Text>
+        </View>
       </View>
-    </View>
-   </BackgroundAuth>
-);
+    </BackgroundAuth>
+  );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: 'center',
   },
+
+  spacer: {
+    flex: 1,
+  },
+
+  content: {
+    alignItems: 'center',
+    paddingHorizontal: 24,
+  },
+
+  logo: {
+    width: 210,
+    height: 210,
+    resizeMode: 'contain',
+  },
+
   title: {
+    marginTop: 18,
     fontSize: 40,
     color: Colors.white,
-    marginTop: 18,
     ...Type.display,
   },
+
   titleIA: {
-  color: '#E53935',
-},
+    color: '#FF1744',
+    textShadowColor: '#FF1744',
+    textShadowOffset: {
+      width: 0,
+      height: 0,
+    },
+    textShadowRadius: 16,
+  },
+
   subtitle: {
+    marginTop: 12,
     fontSize: 16,
-    color: Colors.inkMuted,
+    lineHeight: 23,
+    color: 'rgba(255,255,255,0.72)',
     textAlign: 'center',
-    marginTop: 10,
-    lineHeight: 20,
     ...Type.body,
   },
+
+  footer: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    paddingBottom: 40,
+  },
+
   powered: {
     fontSize: 12,
-    color: Colors.inkFaint,
+    color: 'rgba(255,255,255,0.45)',
     textAlign: 'center',
     letterSpacing: 0.6,
     ...Type.bodyMedium,
