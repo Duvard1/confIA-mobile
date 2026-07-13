@@ -1,7 +1,6 @@
 import { Platform } from 'react-native';
 import { AnalyzeResponse, CallerType } from '@/types/analysis';
 
-// Set EXPO_PUBLIC_API_URL in a .env file to override.
 export const API_BASE_URL =
   process.env.EXPO_PUBLIC_API_URL || 'https://confia-backend.onrender.com';
 
@@ -24,10 +23,7 @@ interface AnalyzeParams {
   userId?: string;
 }
 
-/**
- * Uploads a recorded call to the ConfIA backend and returns the full
- * fraud / social-engineering / acoustic analysis.
- */
+
 export async function analyzeCall({
   fileUri,
   fileName,
@@ -49,8 +45,7 @@ export async function analyzeCall({
   const form = new FormData();
 
   if (Platform.OS === 'web') {
-    // En web, necesitamos un Blob/File real — no el formato {uri, name, type}
-    // de React Native.
+
     try {
       console.log('[analyzeCall] Web: Intentando leer archivo desde URI...');
       const res = await fetch(fileUri);
@@ -90,8 +85,6 @@ export async function analyzeCall({
       body: form,
       headers: {
         Accept: 'application/json',
-        // NOTE: do not set Content-Type manually — RN sets the multipart
-        // boundary automatically when the body is a FormData instance.
       },
     });
     console.log('[analyzeCall] Respuesta HTTP recibida:', {
@@ -109,21 +102,17 @@ export async function analyzeCall({
     let message = `El servidor respondió con un error (${response.status}).`;
     try {
       const body = await response.json();
-      // Log completo para depuración
       console.error('[analyzeCall] Error response:', JSON.stringify(body, null, 2));
-      // FastAPI devuelve errores en "detail", no en "message"
       if (body?.detail) {
         if (typeof body.detail === 'string') {
           message = body.detail;
         } else if (Array.isArray(body.detail)) {
-          // FastAPI 422 validation errors: [{loc, msg, type}, ...]
           message = body.detail.map((e: any) => `${e.loc?.join('.')}: ${e.msg}`).join('\n');
         }
       } else if (body?.message) {
         message = body.message;
       }
     } catch {
-      // ignore parse errors, keep default message
     }
     throw new ApiError(message, response.status);
   }
