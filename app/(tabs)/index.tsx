@@ -14,6 +14,7 @@ import { router } from 'expo-router';
 import * as DocumentPicker from 'expo-document-picker';
 import { Audio } from 'expo-av';
 import { useAuth } from '@clerk/clerk-expo';
+import { Ionicons } from '@expo/vector-icons';
 import { PrimaryButton, SecondaryButton } from '@/components/Buttons';
 import { UploadZone, FileCard } from '@/components/UploadZone';
 import { useAnalysisStore } from '@/store/useAnalysisStore';
@@ -42,14 +43,17 @@ export default function InicioScreen() {
     pendingFile,
     callerType,
     description,
+    audioSource,
     setPendingFile,
     setCallerType,
     setDescription,
+    setAudioSource,
     resetUploadForm,
     setCurrentAnalysis,
   } = useAnalysisStore();
 
   const [analyzing, setAnalyzing] = useState(false);
+  const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const pickFile = async () => {
@@ -58,6 +62,9 @@ export default function InicioScreen() {
       copyToCacheDirectory: true,
     });
     if (result.canceled || !result.assets?.length) return;
+
+    // Reset validation state when picking a new file
+    setHasAttemptedSubmit(false);
 
     const asset = result.assets[0];
     let durationSeconds: number | undefined;
@@ -81,10 +88,20 @@ export default function InicioScreen() {
   };
 
   const onAnalyze = async () => {
+    setHasAttemptedSubmit(true);
     if (!pendingFile) {
       Alert.alert('Selecciona un audio', 'Debes subir una grabación antes de analizar.');
       return;
     }
+
+    if (!audioSource) {
+      Alert.alert(
+        'Selección obligatoria',
+        'Debes indicar si el audio proviene de una Llamada o de WhatsApp antes de continuar.'
+      );
+      return;
+    }
+
     setAnalyzing(true);
     const controller = new AbortController();
     abortControllerRef.current = controller;
@@ -99,10 +116,12 @@ export default function InicioScreen() {
         description: description || undefined,
         userId: userId ?? undefined,
         signal: controller.signal,
+        audioSource,
       });
 
       setCurrentAnalysis(data, pendingFile.name);
       resetUploadForm();
+      setHasAttemptedSubmit(false);
       router.push('/result');
     } catch (err: any) {
       if (err.name === 'AbortError' || controller.signal.aborted) {
@@ -122,6 +141,7 @@ export default function InicioScreen() {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
       setAnalyzing(false);
+      setHasAttemptedSubmit(false);
       Alert.alert('Análisis cancelado', 'El análisis del audio fue cancelado.');
     }
   };
@@ -144,11 +164,69 @@ export default function InicioScreen() {
             name={pendingFile.name}
             durationLabel={formatDuration(pendingFile.durationSeconds)}
             sizeLabel={formatBytes(pendingFile.sizeBytes)}
-            onRemove={() => setPendingFile(null)}
+            onRemove={() => {
+              setPendingFile(null);
+              setHasAttemptedSubmit(false);
+            }}
           />
         ) : (
           <UploadZone onPress={pickFile} />
         )}
+
+        <Text style={styles.label}>
+          Canal de audio <Text style={{ color: Colors.danger }}>*</Text>
+        </Text>
+        <View
+          style={[
+            styles.sourceSelectorContainer,
+            hasAttemptedSubmit && !audioSource && styles.sourceSelectorContainerError,
+          ]}
+        >
+          <Pressable
+            onPress={() => setAudioSource('call')}
+            style={[
+              styles.sourceSelectorOption,
+              audioSource === 'call' && styles.sourceSelectorOptionActive,
+            ]}
+          >
+            <Ionicons
+              name="call-outline"
+              size={16}
+              color={audioSource === 'call' ? Colors.white : Colors.inkMuted}
+              style={{ marginRight: 6 }}
+            />
+            <Text
+              style={[
+                styles.sourceSelectorText,
+                audioSource === 'call' && styles.sourceSelectorTextActive,
+              ]}
+            >
+              Llamada
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={() => setAudioSource('whatsapp')}
+            style={[
+              styles.sourceSelectorOption,
+              audioSource === 'whatsapp' && styles.sourceSelectorOptionActive,
+            ]}
+          >
+            <Ionicons
+              name="logo-whatsapp"
+              size={16}
+              color={audioSource === 'whatsapp' ? Colors.white : Colors.inkMuted}
+              style={{ marginRight: 6 }}
+            />
+            <Text
+              style={[
+                styles.sourceSelectorText,
+                audioSource === 'whatsapp' && styles.sourceSelectorTextActive,
+              ]}
+            >
+              WhatsApp
+            </Text>
+          </Pressable>
+        </View>
 
         <Text style={styles.label}>¿Quién realiza la llamada? (opcional)</Text>
         <View style={styles.chipsRow}>
@@ -250,5 +328,40 @@ const styles = StyleSheet.create({
     minHeight: 96,
     textAlignVertical: 'top',
     ...Type.body,
+  },
+  sourceSelectorContainer: {
+    flexDirection: 'row',
+    backgroundColor: Colors.surfaceAlt,
+    borderRadius: Radius.md,
+    padding: 4,
+    gap: 4,
+    marginTop: Spacing.xs,
+    marginBottom: Spacing.sm,
+    borderWidth: 1.5,
+    borderColor: 'transparent',
+  },
+  sourceSelectorContainerError: {
+    borderColor: Colors.danger,
+    backgroundColor: '#FFF5F5',
+  },
+  sourceSelectorOption: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    borderRadius: Radius.sm,
+  },
+  sourceSelectorOptionActive: {
+    backgroundColor: Colors.navy,
+  },
+  sourceSelectorText: {
+    fontSize: 14,
+    color: Colors.inkMuted,
+    ...Type.bodyMedium,
+  },
+  sourceSelectorTextActive: {
+    color: Colors.white,
+    ...Type.bodySemi,
   },
 });

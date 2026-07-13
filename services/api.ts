@@ -23,6 +23,7 @@ interface AnalyzeParams {
   description?: string;
   userId?: string;
   signal?: AbortSignal;
+  audioSource?: 'call' | 'whatsapp';
 }
 
 
@@ -39,6 +40,7 @@ export async function analyzeCall({
   description,
   userId,
   signal,
+  audioSource,
 }: AnalyzeParams): Promise<AnalyzeResponse> {
   console.log('[analyzeCall] Iniciando análisis de llamada con parámetros:', {
     fileUri,
@@ -96,6 +98,7 @@ export async function analyzeCall({
   }
   if (description) form.append('description', description);
   if (userId) form.append('user_id', userId);
+  if (audioSource) form.append('audio_source', audioSource);
 
   let response: Response;
   try {

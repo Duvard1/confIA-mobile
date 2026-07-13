@@ -13,6 +13,7 @@ interface AnalysisStore {
   pendingFile: PendingFile | null;
   callerType: CallerType | null;
   description: string;
+  audioSource: 'call' | 'whatsapp' | null;
 
   current: AnalysisData | null;
   history: HistoryEntry[];
@@ -20,6 +21,7 @@ interface AnalysisStore {
   setPendingFile: (file: PendingFile | null) => void;
   setCallerType: (t: CallerType | null) => void;
   setDescription: (d: string) => void;
+  setAudioSource: (source: 'call' | 'whatsapp' | null) => void;
   resetUploadForm: () => void;
 
   setCurrentAnalysis: (data: AnalysisData, fileName: string) => void;
@@ -30,6 +32,7 @@ export const useAnalysisStore = create<AnalysisStore>((set, get) => ({
   pendingFile: null,
   callerType: null,
   description: '',
+  audioSource: null,
 
   current: null,
   history: [],
@@ -37,8 +40,9 @@ export const useAnalysisStore = create<AnalysisStore>((set, get) => ({
   setPendingFile: (file) => set({ pendingFile: file }),
   setCallerType: (t) => set({ callerType: t }),
   setDescription: (d) => set({ description: d }),
+  setAudioSource: (source) => set({ audioSource: source }),
   resetUploadForm: () =>
-    set({ pendingFile: null, callerType: null, description: '' }),
+    set({ pendingFile: null, callerType: null, description: '', audioSource: null }),
 
   setCurrentAnalysis: (data, fileName) => {
     const entry: HistoryEntry = {
