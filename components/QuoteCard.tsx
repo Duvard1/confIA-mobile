@@ -8,7 +8,7 @@ export default function QuoteCard({ text }: { text: string }) {
     <View style={styles.card}>
       <Ionicons
         name="chatbox-ellipses-outline"
-        size={16}
+        size={18}
         color={Colors.signalDeep}
         style={{ marginTop: 2 }}
       />
@@ -21,16 +21,19 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     gap: Spacing.sm,
-    backgroundColor: Colors.navy,
-    borderRadius: Radius.md,
-    padding: Spacing.md,
-    marginBottom: Spacing.sm,
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: Radius.lg,
+    padding: Spacing.lg,
+    marginBottom: Spacing.md,
   },
+
   text: {
     flex: 1,
     color: Colors.white,
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: 15,
+    lineHeight: 24,
     fontStyle: 'italic',
     ...Type.body,
   },

@@ -38,7 +38,7 @@ export default function ResultScreen() {
     <View style={styles.screen}>
       <View style={styles.topBar}>
         <Pressable onPress={() => router.back()} hitSlop={10} style={styles.backBtn}>
-          <Ionicons name="chevron-back" size={22} color={Colors.navy} />
+          <Ionicons name="chevron-back" size={22} color={Colors.white} />
         </Pressable>
         <Text style={styles.topBarTitle}>Resultado del análisis</Text>
         <View style={{ width: 30 }} />
@@ -127,7 +127,7 @@ function Section({
   return (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
-        <Ionicons name={icon} size={16} color={Colors.navy} />
+        <Ionicons name={icon} size={18} color={Colors.white} />
         <Text style={styles.sectionTitle}>{title}</Text>
       </View>
       {children}
@@ -138,25 +138,27 @@ function Section({
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: Colors.bg },
   topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.lg,
-    paddingTop: 56,
-    paddingBottom: Spacing.md,
-    backgroundColor: Colors.white,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-  },
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  paddingHorizontal: Spacing.lg,
+  paddingTop: 56,
+  paddingBottom: Spacing.md,
+  backgroundColor: Colors.black,
+  borderBottomWidth: 1,
+  borderBottomColor: Colors.border,
+},
   backBtn: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: Colors.surfaceAlt,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  topBarTitle: { fontSize: 15, color: Colors.navy, ...Type.bodySemi },
+  width: 34,
+  height: 34,
+  borderRadius: 17,
+  backgroundColor: Colors.surfaceAlt,
+  borderWidth: 1,
+  borderColor: Colors.border,
+  alignItems: 'center',
+  justifyContent: 'center',
+},
+  topBarTitle: { fontSize: 15, color: Colors.white, ...Type.bodySemi },
 
   content: { padding: Spacing.xl, paddingBottom: Spacing.xxl },
 
@@ -181,14 +183,14 @@ const styles = StyleSheet.create({
   },
   levelPillText: { color: Colors.white, fontSize: 13, ...Type.bodySemi },
   heroMessage: {
-    marginTop: Spacing.md,
-    paddingHorizontal: Spacing.xl,
-    fontSize: 13,
-    lineHeight: 19,
-    color: Colors.ink,
-    textAlign: 'center',
-    ...Type.body,
-  },
+  marginTop: Spacing.md,
+  paddingHorizontal: Spacing.xl,
+  fontSize: 13,
+  lineHeight: 19,
+  color: Colors.white,
+  textAlign: 'center',
+  ...Type.body,
+},
 
   indicatorsRow: {
     flexDirection: 'row',
@@ -208,18 +210,18 @@ const styles = StyleSheet.create({
     gap: 8,
     marginBottom: Spacing.md,
   },
-  sectionTitle: { fontSize: 16, color: Colors.navy, ...Type.displaySemi },
-  summaryText: {
-    fontSize: 14,
-    lineHeight: 21,
-    color: Colors.ink,
-    backgroundColor: Colors.surface,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: Radius.md,
-    padding: Spacing.lg,
-    ...Type.body,
-  },
+  sectionTitle: { fontSize: 17, color: Colors.white, ...Type.displaySemi },
+ summaryText: {
+  fontSize: 14,
+  lineHeight: 21,
+  color: Colors.white,
+  backgroundColor: Colors.surface,
+  borderWidth: 1,
+  borderColor: Colors.border,
+  borderRadius: Radius.md,
+  padding: Spacing.lg,
+  ...Type.body,
+},
 
   emptyContainer: {
     flex: 1,
@@ -228,5 +230,5 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.bg,
     padding: Spacing.xl,
   },
-  emptyTitle: { fontSize: 16, color: Colors.navy, marginTop: Spacing.md, ...Type.bodySemi },
+  emptyTitle: { fontSize: 16, color: Colors.white, marginTop: Spacing.md, ...Type.bodySemi },
 });
