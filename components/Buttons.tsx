@@ -8,7 +8,13 @@ import {
   StyleProp,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, Radius, Spacing, Type } from '@/constants/theme';
+import {
+  Colors,
+  Radius,
+  Spacing,
+  Type,
+  Shadow,
+} from '@/constants/theme';
 
 interface ButtonProps {
   label: string;
@@ -27,14 +33,16 @@ export function PrimaryButton({
   icon,
   style,
 }: ButtonProps) {
+  const isDisabled = disabled || loading;
+
   return (
     <Pressable
       onPress={onPress}
-      disabled={disabled || loading}
+      disabled={isDisabled}
       style={({ pressed }) => [
         styles.primary,
-        (disabled || loading) && styles.disabled,
-        pressed && !disabled && !loading && styles.pressed,
+        isDisabled && styles.disabled,
+        pressed && !isDisabled && styles.primaryPressed,
         style,
       ]}
     >
@@ -45,11 +53,12 @@ export function PrimaryButton({
           {icon ? (
             <Ionicons
               name={icon}
-              size={18}
+              size={20}
               color={Colors.white}
-              style={{ marginRight: 8 }}
+              style={styles.icon}
             />
           ) : null}
+
           <Text style={styles.primaryLabel}>{label}</Text>
         </>
       )}
@@ -57,7 +66,13 @@ export function PrimaryButton({
   );
 }
 
-export function SecondaryButton({ label, onPress, icon, style, disabled }: ButtonProps) {
+export function SecondaryButton({
+  label,
+  onPress,
+  icon,
+  style,
+  disabled,
+}: ButtonProps) {
   return (
     <Pressable
       onPress={onPress}
@@ -65,7 +80,7 @@ export function SecondaryButton({ label, onPress, icon, style, disabled }: Butto
       style={({ pressed }) => [
         styles.secondary,
         disabled && styles.disabled,
-        pressed && styles.pressedSecondary,
+        pressed && !disabled && styles.secondaryPressed,
         style,
       ]}
     >
@@ -73,10 +88,11 @@ export function SecondaryButton({ label, onPress, icon, style, disabled }: Butto
         <Ionicons
           name={icon}
           size={18}
-          color={Colors.navy}
-          style={{ marginRight: 8 }}
+          color={Colors.white}
+          style={styles.icon}
         />
       ) : null}
+
       <Text style={styles.secondaryLabel}>{label}</Text>
     </Pressable>
   );
@@ -84,34 +100,58 @@ export function SecondaryButton({ label, onPress, icon, style, disabled }: Butto
 
 const styles = StyleSheet.create({
   primary: {
-    backgroundColor: Colors.navy,
-    borderRadius: Radius.md,
+    minHeight: 58,
+    backgroundColor: Colors.brand,
+    borderRadius: Radius.lg,
     paddingVertical: 16,
+    paddingHorizontal: Spacing.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...Shadow.brand,
+  },
+
+  primaryPressed: {
+    backgroundColor: Colors.brandDeep,
+    transform: [{ scale: 0.99 }],
+  },
+
+  primaryLabel: {
+    color: Colors.white,
+    fontSize: 17,
+    ...Type.bodySemi,
+  },
+
+  secondary: {
+    minHeight: 56,
+    backgroundColor: Colors.surfaceAlt,
+    borderWidth: 1,
+    borderColor: Colors.borderStrong,
+    borderRadius: Radius.lg,
+    paddingVertical: 15,
+    paddingHorizontal: Spacing.lg,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  primaryLabel: {
+
+  secondaryPressed: {
+    backgroundColor: Colors.surface,
+  },
+
+  secondaryLabel: {
     color: Colors.white,
     fontSize: 16,
     ...Type.bodySemi,
   },
-  secondary: {
-    backgroundColor: Colors.surface,
-    borderWidth: 1.5,
-    borderColor: Colors.borderStrong,
-    borderRadius: Radius.md,
-    paddingVertical: 15,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+
+  icon: {
+    marginRight: 8,
   },
-  secondaryLabel: {
-    color: Colors.navy,
-    fontSize: 16,
-    ...Type.bodySemi,
+
+  disabled: {
+    opacity: 0.5,
+    shadowOpacity: 0,
+    elevation: 0,
   },
-  disabled: { opacity: 0.5 },
-  pressed: { opacity: 0.9 },
-  pressedSecondary: { backgroundColor: Colors.surfaceAlt },
 });

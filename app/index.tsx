@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Animated, Easing } from 'react-native';
 import { router } from 'expo-router';
 import Logo from '@/components/Logo';
 import { Colors, Type } from '@/constants/theme';
+import BackgroundAuth from '@/components/BackgroundAuth';
 
 export default function SplashScreen() {
   const fade = useRef(new Animated.Value(0)).current;
@@ -49,8 +50,15 @@ export default function SplashScreen() {
   }, []);
 
   return (
-    <View style={styles.container}>
+  <BackgroundAuth>
+    <View
+      style={{
+        flex: 1,
+        alignItems: 'center',
+      }}
+    >
       <View style={{ flex: 1 }} />
+
       <Animated.View
         style={{
           opacity: fade,
@@ -59,34 +67,48 @@ export default function SplashScreen() {
         }}
       >
         <Logo size={92} />
-        <Text style={styles.title}>ConfIA</Text>
+
+        <Text style={styles.title}>
+  Guard<Text style={styles.titleIA}>IA</Text>n
+</Text>
+
         <Text style={styles.subtitle}>
-          Analiza llamadas. Detecta riesgos.{'\n'}Decide con confianza.
+          Analiza llamadas. Detecta riesgos.{'\n'}
+          Decide con confianza.
         </Text>
       </Animated.View>
-      <View style={{ flex: 1, justifyContent: 'flex-end', paddingBottom: 40 }}>
+
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'flex-end',
+          paddingBottom: 40,
+        }}
+      >
         <Animated.Text style={[styles.powered, { opacity: fade }]}>
           Powered by AI
         </Animated.Text>
       </View>
     </View>
-  );
+   </BackgroundAuth>
+);
 }
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.white,
     alignItems: 'center',
   },
   title: {
-    fontSize: 30,
-    color: Colors.navy,
+    fontSize: 40,
+    color: Colors.white,
     marginTop: 18,
     ...Type.display,
   },
+  titleIA: {
+  color: '#E53935',
+},
   subtitle: {
-    fontSize: 14,
+    fontSize: 16,
     color: Colors.inkMuted,
     textAlign: 'center',
     marginTop: 10,

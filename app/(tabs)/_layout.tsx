@@ -1,24 +1,33 @@
-import React from 'react';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, Type } from '@/constants/theme';
 
 export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: Colors.navy,
-        tabBarInactiveTintColor: Colors.inkFaint,
+
+        tabBarActiveTintColor: '#FFFFFF',
+        tabBarInactiveTintColor: '#7F8A9A',
+
         tabBarStyle: {
-          backgroundColor: Colors.white,
-          borderTopColor: Colors.border,
+          backgroundColor: 'rgba(8, 12, 20, 0.88)',
           borderTopWidth: 1,
-          height: 62,
-          paddingBottom: 8,
-          paddingTop: 6,
+          borderTopColor: 'rgba(255,255,255,0.08)',
+          elevation: 0,
+          height: 82,
+          paddingTop: 8,
+          paddingBottom: 10,
         },
-        tabBarLabelStyle: { fontSize: 11, ...Type.bodyMedium },
+
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: '600',
+        },
+
+        sceneStyle: {
+          backgroundColor: 'transparent',
+        },
       }}
     >
       <Tabs.Screen
@@ -26,34 +35,37 @@ export default function TabsLayout() {
         options={{
           title: 'Inicio',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home-outline" color={color} size={size ?? 22} />
+            <Ionicons name="home-outline" size={size} color={color} />
           ),
         }}
       />
+
       <Tabs.Screen
         name="historial"
         options={{
           title: 'Historial',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="time-outline" color={color} size={size ?? 22} />
+            <Ionicons name="time-outline" size={size} color={color} />
           ),
         }}
       />
+
       <Tabs.Screen
         name="dashboard"
         options={{
           title: 'Dashboard',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="stats-chart-outline" color={color} size={size ?? 22} />
+            <Ionicons name="bar-chart-outline" size={size} color={color} />
           ),
         }}
       />
+
       <Tabs.Screen
         name="perfil"
         options={{
           title: 'Perfil',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person-outline" color={color} size={size ?? 22} />
+            <Ionicons name="person-outline" size={size} color={color} />
           ),
         }}
       />

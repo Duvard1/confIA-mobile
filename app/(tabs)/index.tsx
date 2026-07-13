@@ -1,43 +1,58 @@
+import BackgroundMain from '@/components/BackgroundMain';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { PrimaryButton } from '@/components/Buttons';
+import { FileCard, UploadZone } from '@/components/UploadZone';
+import { Colors, Radius, Spacing, Type } from '@/constants/theme';
+import { analyzeCall, ApiError } from '@/services/api';
+import { useAnalysisStore } from '@/store/useAnalysisStore';
+import { CallerType } from '@/types/analysis';
+import { useAuth } from '@clerk/clerk-expo';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
+import { Audio } from 'expo-av';
+import * as DocumentPicker from 'expo-document-picker';
+import { router } from 'expo-router';
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TextInput,
-  Pressable,
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
 } from 'react-native';
-import { router } from 'expo-router';
-import * as DocumentPicker from 'expo-document-picker';
-import { Audio } from 'expo-av';
-import { useAuth } from '@clerk/clerk-expo';
-import { PrimaryButton } from '@/components/Buttons';
-import { UploadZone, FileCard } from '@/components/UploadZone';
-import { useAnalysisStore } from '@/store/useAnalysisStore';
-import { analyzeCall, ApiError } from '@/services/api';
-import { CallerType } from '@/types/analysis';
-import { Colors, Radius, Spacing, Type } from '@/constants/theme';
 
-const CALLER_OPTIONS: CallerType[] = ['Familiar', 'Amigo', 'Empresa', 'Desconocido'];
+const CALLER_OPTIONS: CallerType[] = [
+  'Familiar',
+  'Amigo',
+  'Empresa',
+  'Desconocido',
+];
 
 function formatBytes(bytes?: number) {
   if (!bytes) return undefined;
-  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+
+  if (bytes < 1024 * 1024) {
+    return `${Math.round(bytes / 1024)} KB`;
+  }
+
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 function formatDuration(seconds?: number) {
   if (!seconds) return undefined;
-  const m = Math.floor(seconds / 60);
-  const s = Math.round(seconds % 60);
-  return `${m}:${s.toString().padStart(2, '0')} min`;
+
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = Math.round(seconds % 60);
+
+  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')} min`;
 }
 
 export default function InicioScreen() {
   const { userId } = useAuth();
+
   const {
     pendingFile,
     callerType,
@@ -50,24 +65,33 @@ export default function InicioScreen() {
   } = useAnalysisStore();
 
   const [analyzing, setAnalyzing] = useState(false);
-
+  const tabBarHeight = useBottomTabBarHeight();
   const pickFile = async () => {
     const result = await DocumentPicker.getDocumentAsync({
       type: ['audio/*'],
       copyToCacheDirectory: true,
     });
-    if (result.canceled || !result.assets?.length) return;
+
+    if (result.canceled || !result.assets?.length) {
+      return;
+    }
 
     const asset = result.assets[0];
     let durationSeconds: number | undefined;
+
     try {
-      const { sound, status } = await Audio.Sound.createAsync({ uri: asset.uri });
+      const { sound, status } = await Audio.Sound.createAsync({
+        uri: asset.uri,
+      });
+
       if (status.isLoaded && status.durationMillis) {
         durationSeconds = status.durationMillis / 1000;
       }
+
       await sound.unloadAsync();
     } catch {
-      // duration is optional — backend also returns it after analysis
+      // La duración es opcional.
+      // El backend también puede devolverla después del análisis.
     }
 
     setPendingFile({
@@ -81,10 +105,15 @@ export default function InicioScreen() {
 
   const onAnalyze = async () => {
     if (!pendingFile) {
-      Alert.alert('Selecciona un audio', 'Debes subir una grabación antes de analizar.');
+      Alert.alert(
+        'Selecciona un audio',
+        'Debes subir una grabación antes de analizar.',
+      );
       return;
     }
+
     setAnalyzing(true);
+
     try {
       const { data } = await analyzeCall({
         fileUri: pendingFile.uri,
@@ -94,12 +123,16 @@ export default function InicioScreen() {
         description: description || undefined,
         userId: userId ?? undefined,
       });
+
       setCurrentAnalysis(data, pendingFile.name);
       resetUploadForm();
       router.push('/result');
     } catch (err) {
       const message =
-        err instanceof ApiError ? err.message : 'Ocurrió un error inesperado durante el análisis.';
+        err instanceof ApiError
+          ? err.message
+          : 'Ocurrió un error inesperado durante el análisis.';
+
       Alert.alert('No se pudo analizar el audio', message);
     } finally {
       setAnalyzing(false);
@@ -107,114 +140,205 @@ export default function InicioScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={styles.content}
-        keyboardShouldPersistTaps="handled"
+    <BackgroundMain>
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <KeyboardAvoidingView
+        style={styles.keyboardContainer}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <Text style={styles.eyebrow}>ConfIA</Text>
-        <Text style={styles.title}>Analizar llamada</Text>
+        <ScrollView
+  style={styles.container}
+  contentContainerStyle={styles.content}
+  keyboardShouldPersistTaps="handled"
+  showsVerticalScrollIndicator={false}
+>
+          <View style={styles.headerBlock}>
+            <Text style={styles.eyebrow}>
+              Guard<Text style={styles.eyebrowIA}>IA</Text>n
+            </Text>
 
-        {pendingFile ? (
-          <FileCard
-            name={pendingFile.name}
-            durationLabel={formatDuration(pendingFile.durationSeconds)}
-            sizeLabel={formatBytes(pendingFile.sizeBytes)}
-            onRemove={() => setPendingFile(null)}
+            <Text style={styles.title}>Analizar llamada</Text>
+          </View>
+
+          {pendingFile ? (
+            <FileCard
+              name={pendingFile.name}
+              durationLabel={formatDuration(
+                pendingFile.durationSeconds,
+              )}
+              sizeLabel={formatBytes(pendingFile.sizeBytes)}
+              onRemove={() => setPendingFile(null)}
+            />
+          ) : (
+            <UploadZone onPress={pickFile} />
+          )}
+
+          <Text style={styles.label}>
+            ¿Quién realiza la llamada?{' '}
+            <Text style={styles.optionalLabel}>(opcional)</Text>
+          </Text>
+
+          <View style={styles.chipsRow}>
+            {CALLER_OPTIONS.map((option) => {
+              const active = callerType === option;
+
+              return (
+                <Pressable
+                  key={option}
+                  onPress={() =>
+                    setCallerType(active ? null : option)
+                  }
+                  style={({ pressed }) => [
+                    styles.chip,
+                    active && styles.chipActive,
+                    pressed && styles.chipPressed,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.chipText,
+                      active && styles.chipTextActive,
+                    ]}
+                  >
+                    {option}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          <Text style={styles.label}>Descripción</Text>
+
+          <TextInput
+            value={description}
+            onChangeText={setDescription}
+            placeholder="Agrega contexto sobre la llamada (opcional)"
+            placeholderTextColor="rgba(255,255,255,0.42)"
+            multiline
+            numberOfLines={4}
+            textAlignVertical="top"
+            style={styles.textArea}
           />
-        ) : (
-          <UploadZone onPress={pickFile} />
-        )}
 
-        <Text style={styles.label}>¿Quién realiza la llamada? (opcional)</Text>
-        <View style={styles.chipsRow}>
-          {CALLER_OPTIONS.map((opt) => {
-            const active = callerType === opt;
-            return (
-              <Pressable
-                key={opt}
-                onPress={() => setCallerType(active ? null : opt)}
-                style={[styles.chip, active && styles.chipActive]}
-              >
-                <Text style={[styles.chipText, active && styles.chipTextActive]}>{opt}</Text>
-              </Pressable>
-            );
-          })}
-        </View>
-
-        <Text style={styles.label}>Descripción</Text>
-        <TextInput
-          value={description}
-          onChangeText={setDescription}
-          placeholder="Agrega contexto sobre la llamada (opcional)"
-          placeholderTextColor={Colors.inkFaint}
-          multiline
-          numberOfLines={4}
-          style={styles.textArea}
-        />
-
-        <PrimaryButton
-          label={analyzing ? 'Analizando...' : 'Analizar audio'}
-          icon={analyzing ? undefined : 'sparkles-outline'}
-          loading={analyzing}
-          onPress={onAnalyze}
-          style={{ marginTop: Spacing.lg }}
-        />
-      </ScrollView>
-    </KeyboardAvoidingView>
+          <PrimaryButton
+            label={analyzing ? 'Analizando...' : 'Analizar audio'}
+            icon={analyzing ? undefined : 'sparkles-outline'}
+            loading={analyzing}
+            onPress={onAnalyze}
+            style={styles.analyzeButton}
+          />
+        </ScrollView>
+      </KeyboardAvoidingView>
+      </SafeAreaView>
+    </BackgroundMain>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.bg },
-  content: { padding: Spacing.xl, paddingBottom: Spacing.xxl },
-  eyebrow: {
-    fontSize: 12,
-    color: Colors.signalDeep,
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-    ...Type.bodySemi,
+  keyboardContainer: {
+    flex: 1,
   },
-  title: {
-    fontSize: 26,
-    color: Colors.navy,
-    marginTop: 4,
+safeArea: {
+  flex: 1,
+},
+  container: {
+    flex: 1,
+    backgroundColor: 'transparent',
+  },
+
+  content: {
+  paddingHorizontal: Spacing.xl,
+  paddingTop: 16,
+  paddingBottom: 10,
+},
+
+  headerBlock: {
     marginBottom: Spacing.xl,
-    ...Type.display,
   },
+
+  eyebrow: {
+    fontSize: 21,
+    color: Colors.white,
+    letterSpacing: 0.8,
+    fontFamily: 'Sora_700Bold',
+  },
+
+  eyebrowIA: {
+    color: '#E53935',
+  },
+
+title: {
+  fontFamily: 'Sora_600SemiBold',
+  fontSize: 24,
+  lineHeight: 30,
+  color: Colors.white,
+  marginTop: 10,
+  marginBottom: 0,
+},
   label: {
-    fontSize: 13,
-    color: Colors.inkMuted,
+    fontSize: 15,
+    color: Colors.white,
     marginTop: Spacing.xl,
     marginBottom: Spacing.sm,
-    ...Type.bodyMedium,
+    ...Type.bodySemi,
   },
-  chipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+
+  optionalLabel: {
+    color: 'rgba(255,255,255,0.58)',
+    ...Type.body,
+  },
+
+  chipsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+
   chip: {
-    paddingVertical: 8,
-    paddingHorizontal: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 17,
     borderRadius: Radius.pill,
     borderWidth: 1,
-    borderColor: Colors.borderStrong,
-    backgroundColor: Colors.surface,
+    borderColor: 'rgba(255,255,255,0.18)',
+    backgroundColor: 'rgba(255,255,255,0.08)',
   },
-  chipActive: { backgroundColor: Colors.navy, borderColor: Colors.navy },
-  chipText: { fontSize: 13, color: Colors.ink, ...Type.bodyMedium },
-  chipTextActive: { color: Colors.white },
+
+  chipActive: {
+    backgroundColor: 'rgba(229,57,53,0.22)',
+    borderColor: '#E53935',
+  },
+
+  chipPressed: {
+    opacity: 0.75,
+  },
+
+  chipText: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.82)',
+    ...Type.bodyMedium,
+  },
+
+  chipTextActive: {
+    color: Colors.white,
+    ...Type.bodySemi,
+  },
+
   textArea: {
-    backgroundColor: Colors.surface,
+    minHeight: 90,
+    backgroundColor: 'rgba(7,10,18,0.72)',
     borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: Radius.md,
-    padding: Spacing.md,
-    fontSize: 14,
-    color: Colors.ink,
-    minHeight: 96,
-    textAlignVertical: 'top',
+    borderColor: 'rgba(255,255,255,0.18)',
+    borderRadius: Radius.lg,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    fontSize: 15,
+    lineHeight: 22,
+    color: Colors.white,
     ...Type.body,
+  },
+
+  analyzeButton: {
+    marginTop: Spacing.lg,
+    marginBottom: 20,
   },
 });

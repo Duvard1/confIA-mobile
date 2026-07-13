@@ -2,14 +2,15 @@
  * login.tsx — Flujo OAuth para iOS / Android.
  * En web, Metro carga login.web.tsx en su lugar.
  */
-import React, { useCallback, useEffect } from 'react';
-import { View, Text, StyleSheet, Alert } from 'react-native';
+import Background from '@/components/BackgroundAuth';
+import { PrimaryButton, SecondaryButton } from '@/components/Buttons';
+import Logo from '@/components/Logo';
+import { Colors, Spacing, Type } from '@/constants/theme';
+import { useAuth, useOAuth } from '@clerk/clerk-expo';
 import { router } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
-import { useAuth, useOAuth } from '@clerk/clerk-expo';
-import Logo from '@/components/Logo';
-import { PrimaryButton, SecondaryButton } from '@/components/Buttons';
-import { Colors, Spacing, Type } from '@/constants/theme';
+import React, { useCallback, useEffect } from 'react';
+import { Alert, StyleSheet, Text, View } from 'react-native';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -59,6 +60,7 @@ export default function LoginScreen() {
   };
 
   return (
+  <Background>
     <View style={styles.container}>
       <View style={{ flex: 1 }} />
 
@@ -92,13 +94,14 @@ export default function LoginScreen() {
         </Text>
       </View>
     </View>
+    </Background>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.white,
+    backgroundColor:'transaparent',
     paddingHorizontal: Spacing.xl,
     paddingBottom: Spacing.xxl,
   },

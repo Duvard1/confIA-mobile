@@ -1,4 +1,5 @@
 import React from 'react';
+import BackgroundMain from '@/components/BackgroundMain';
 import { View, Text, StyleSheet, FlatList, Pressable } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -49,31 +50,45 @@ export default function HistorialScreen() {
   const { history } = useAnalysisStore();
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Historial</Text>
-      {history.length === 0 ? (
-        <View style={styles.empty}>
-          <Ionicons name="time-outline" size={40} color={Colors.inkFaint} />
-          <Text style={styles.emptyTitle}>Aún no hay análisis</Text>
-          <Text style={styles.emptyText}>
-            Las llamadas que analices aparecerán aquí para que puedas revisarlas cuando quieras.
-          </Text>
-        </View>
-      ) : (
-        <FlatList
-          data={history}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => <HistoryRow item={item} />}
-          contentContainerStyle={{ paddingBottom: Spacing.xxl }}
-          ItemSeparatorComponent={() => <View style={{ height: Spacing.sm }} />}
-        />
-      )}
-    </View>
+    <BackgroundMain>
+      <View style={styles.container}>
+        <Text style={styles.title}>Historial</Text>
+
+        {history.length === 0 ? (
+          <View style={styles.empty}>
+            <Ionicons 
+              name="time-outline" 
+              size={40} 
+              color={Colors.inkFaint} 
+            />
+
+            <Text style={styles.emptyTitle}>
+              Aún no hay análisis
+            </Text>
+
+            <Text style={styles.emptyText}>
+              Las llamadas que analices aparecerán aquí para que puedas revisarlas cuando quieras.
+            </Text>
+          </View>
+        ) : (
+          <FlatList
+            data={history}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => <HistoryRow item={item} />}
+            contentContainerStyle={{ paddingBottom: Spacing.xxl }}
+            ItemSeparatorComponent={() => (
+              <View style={{ height: Spacing.sm }} />
+            )}
+          />
+        )}
+
+      </View>
+    </BackgroundMain>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.bg, padding: Spacing.xl },
+  container: { flex: 1, backgroundColor: 'transparent', padding: Spacing.xl },
   title: { fontSize: 24, color: Colors.navy, marginBottom: Spacing.lg, ...Type.display },
   row: {
     flexDirection: 'row',

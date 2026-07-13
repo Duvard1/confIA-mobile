@@ -51,11 +51,11 @@ const styles = StyleSheet.create({
   zone: {
     borderWidth: 1.5,
     borderColor: Colors.borderStrong,
-    borderStyle: 'dashed',
+    borderStyle: 'solid',
     borderRadius: Radius.lg,
     paddingVertical: Spacing.xxl,
     alignItems: 'center',
-    backgroundColor: Colors.surface,
+    backgroundColor: 'rgba(20,20,20,0.65)'
   },
   pressed: { backgroundColor: Colors.surfaceAlt },
   iconCircle: {
@@ -82,7 +82,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface,
     borderRadius: Radius.md,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: 'rgba(255,255,255,0.18)',
     padding: Spacing.md,
   },
   fileIcon: {

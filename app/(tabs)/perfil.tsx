@@ -1,4 +1,5 @@
 import React from 'react';
+import BackgroundMain from '@/components/BackgroundMain';
 import { View, Text, StyleSheet, Pressable, Image } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -37,6 +38,7 @@ export default function PerfilScreen() {
   };
 
   return (
+  <BackgroundMain>
     <View style={styles.container}>
       <Text style={styles.title}>Perfil</Text>
 
@@ -48,6 +50,7 @@ export default function PerfilScreen() {
             <Ionicons name="person" size={26} color={Colors.signalDeep} />
           )}
         </View>
+
         <View style={{ flex: 1 }}>
           <Text style={styles.name}>{name}</Text>
           <Text style={styles.email}>{email}</Text>
@@ -69,11 +72,12 @@ export default function PerfilScreen() {
         <Text style={styles.signOutText}>Cerrar sesión</Text>
       </Pressable>
     </View>
+  </BackgroundMain>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.bg, padding: Spacing.xl },
+  container: { flex: 1, backgroundColor: 'transparent', padding: Spacing.xl },
   title: { fontSize: 24, color: Colors.navy, marginBottom: Spacing.lg, ...Type.display },
   profileCard: {
     flexDirection: 'row',
