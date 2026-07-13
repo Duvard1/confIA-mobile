@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "confIA-mobile",
-    "slug": "confIA-mobile",
+    "name": "GuardIAn-mobile",
+    "slug": "GuardIAn-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
