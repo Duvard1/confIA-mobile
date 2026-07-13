@@ -14,7 +14,6 @@ import BackgroundAuth from '@/components/BackgroundAuth';
 export default function SplashScreen() {
   const fade = useRef(new Animated.Value(0)).current;
   const rise = useRef(new Animated.Value(12)).current;
-  const logoPulse = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     Animated.parallel([
@@ -33,35 +32,12 @@ export default function SplashScreen() {
       }),
     ]).start();
 
-    const pulseAnimation = Animated.loop(
-      Animated.sequence([
-        Animated.timing(logoPulse, {
-          toValue: 1.05,
-          duration: 1200,
-          easing: Easing.inOut(Easing.sin),
-          useNativeDriver: true,
-        }),
-
-        Animated.timing(logoPulse, {
-          toValue: 1,
-          duration: 1200,
-          easing: Easing.inOut(Easing.sin),
-          useNativeDriver: true,
-        }),
-      ]),
-    );
-
-    pulseAnimation.start();
-
     const timer = setTimeout(() => {
       router.replace('/login');
     }, 1800);
 
-    return () => {
-      clearTimeout(timer);
-      pulseAnimation.stop();
-    };
-  }, [fade, rise, logoPulse]);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <BackgroundAuth>
@@ -73,10 +49,7 @@ export default function SplashScreen() {
             styles.content,
             {
               opacity: fade,
-              transform: [
-                { translateY: rise },
-                { scale: logoPulse },
-              ],
+              transform: [{ translateY: rise }],
             },
           ]}
         >
@@ -90,7 +63,8 @@ export default function SplashScreen() {
           </Text>
 
           <Text style={styles.subtitle}>
-            Analiza llamadas. Detecta riesgos.{'\n'}
+            Analiza llamadas. Detecta riesgos.
+            {'\n'}
             Decide con confianza.
           </Text>
         </Animated.View>
@@ -104,7 +78,7 @@ export default function SplashScreen() {
               },
             ]}
           >
-            Powered by AI
+            Análisis Forense Inteligente
           </Animated.Text>
         </View>
       </View>
@@ -128,33 +102,27 @@ const styles = StyleSheet.create({
   },
 
   logo: {
-    width: 210,
-    height: 210,
+    width: 180,
+    height: 180,
     resizeMode: 'contain',
   },
 
   title: {
     marginTop: 18,
-    fontSize: 40,
+    fontSize: 42,
     color: Colors.white,
     ...Type.display,
   },
 
   titleIA: {
-    color: '#FF1744',
-    textShadowColor: '#FF1744',
-    textShadowOffset: {
-      width: 0,
-      height: 0,
-    },
-    textShadowRadius: 16,
+    color: '#C62828',
   },
 
   subtitle: {
-    marginTop: 12,
+    marginTop: 14,
     fontSize: 16,
-    lineHeight: 23,
-    color: 'rgba(255,255,255,0.72)',
+    lineHeight: 24,
+    color: 'rgba(255,255,255,0.75)',
     textAlign: 'center',
     ...Type.body,
   },
@@ -162,13 +130,12 @@ const styles = StyleSheet.create({
   footer: {
     flex: 1,
     justifyContent: 'flex-end',
-    paddingBottom: 40,
+    paddingBottom: 42,
   },
 
   powered: {
     fontSize: 12,
     color: 'rgba(255,255,255,0.45)',
-    textAlign: 'center',
     letterSpacing: 0.6,
     ...Type.bodyMedium,
   },

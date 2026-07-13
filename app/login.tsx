@@ -75,7 +75,7 @@ export default function LoginScreen() {
   Guard<Text style={styles.ia}>IA</Text>n
 </Text>
         <Text style={styles.subtitle}>
-          Protege tus llamadas frente a fraudes e inteligencia artificial.
+          Protege tus llamadas de fraudes y voces generadas por inteligencia artificial.
         </Text>
       </View>
 
