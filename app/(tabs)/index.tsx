@@ -50,7 +50,8 @@ function formatDuration(seconds?: number) {
 
 export default function InicioScreen() {
   const { userId } = useAuth();
-  const { user } = useUser();
+  const { user, isLoaded } = useUser();
+  
 
   const {
     pendingFile,
@@ -63,7 +64,12 @@ export default function InicioScreen() {
 
   const [analyzing, setAnalyzing] = useState(false);
 
-  const userName = user?.firstName || 'Cristian';
+  const userName =
+  user?.fullName ||
+  user?.firstName ||
+  user?.username ||
+  user?.primaryEmailAddress?.emailAddress?.split('@')[0] ||
+  'Usuario';
 
   const pickFile = async () => {
     try {
@@ -177,7 +183,9 @@ export default function InicioScreen() {
         {/* Mensaje de bienvenida */}
         <Text style={styles.welcome}>
           Bienvenido,{' '}
-          <Text style={styles.userName}>{userName}</Text>
+          <Text style={styles.userName}>
+            {isLoaded ? userName : ''}
+          </Text>
         </Text>
 
         <Text style={styles.description}>
