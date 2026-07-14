@@ -1,15 +1,15 @@
+import BackgroundAuth from '@/components/BackgroundAuth';
+import { Colors, Type } from '@/constants/theme';
+import { router } from 'expo-router';
 import React, { useEffect, useRef } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
   Animated,
   Easing,
   Image,
+  StyleSheet,
+  Text,
+  View,
 } from 'react-native';
-import { router } from 'expo-router';
-import { Colors, Type } from '@/constants/theme';
-import BackgroundAuth from '@/components/BackgroundAuth';
 
 export default function SplashScreen() {
   const fade = useRef(new Animated.Value(0)).current;

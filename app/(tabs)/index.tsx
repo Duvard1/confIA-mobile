@@ -1,38 +1,34 @@
-import BackgroundMain from '@/components/BackgroundMain';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { PrimaryButton } from '@/components/Buttons';
-import { FileCard, UploadZone } from '@/components/UploadZone';
-import { Colors, Radius, Spacing, Type } from '@/constants/theme';
-import { analyzeCall, ApiError } from '@/services/api';
-import { useAnalysisStore } from '@/store/useAnalysisStore';
-import { CallerType } from '@/types/analysis';
-import { useAuth } from '@clerk/clerk-expo';
-import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
+import { useAuth, useUser } from '@clerk/clerk-expo';
+import { Ionicons } from '@expo/vector-icons';
 import { Audio } from 'expo-av';
 import * as DocumentPicker from 'expo-document-picker';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
-  KeyboardAvoidingView,
-  Platform,
+  Image,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from 'react-native';
 
-const CALLER_OPTIONS: CallerType[] = [
-  'Familiar',
-  'Amigo',
-  'Empresa',
-  'Desconocido',
-];
+import BackgroundAuth from '@/components/BackgroundAuth';
+import { Type } from '@/constants/theme';
+import { analyzeCall, ApiError } from '@/services/api';
+import { useAnalysisStore } from '@/store/useAnalysisStore';
+
+const BLUE = '#168BFF';
+const LIGHT_BLUE = '#73B7FF';
+const PINK = '#FF2D6F';
+const WHITE = '#FFFFFF';
+
+const WAVE_HEIGHTS = [18, 30, 43, 34, 23];
 
 function formatBytes(bytes?: number) {
-  if (!bytes) return undefined;
+  if (!bytes) return '';
 
   if (bytes < 1024 * 1024) {
     return `${Math.round(bytes / 1024)} KB`;
@@ -42,72 +38,85 @@ function formatBytes(bytes?: number) {
 }
 
 function formatDuration(seconds?: number) {
-  if (!seconds) return undefined;
+  if (!seconds) return '';
 
   const minutes = Math.floor(seconds / 60);
   const remainingSeconds = Math.round(seconds % 60);
 
-  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')} min`;
+  return `${minutes}:${remainingSeconds
+    .toString()
+    .padStart(2, '0')} min`;
 }
 
 export default function InicioScreen() {
   const { userId } = useAuth();
+  const { user } = useUser();
 
   const {
     pendingFile,
     callerType,
     description,
     setPendingFile,
-    setCallerType,
-    setDescription,
     resetUploadForm,
     setCurrentAnalysis,
   } = useAnalysisStore();
 
   const [analyzing, setAnalyzing] = useState(false);
-  const tabBarHeight = useBottomTabBarHeight();
+
+  const userName = user?.firstName || 'Cristian';
+
   const pickFile = async () => {
-    const result = await DocumentPicker.getDocumentAsync({
-      type: ['audio/*'],
-      copyToCacheDirectory: true,
-    });
-
-    if (result.canceled || !result.assets?.length) {
-      return;
-    }
-
-    const asset = result.assets[0];
-    let durationSeconds: number | undefined;
-
     try {
-      const { sound, status } = await Audio.Sound.createAsync({
-        uri: asset.uri,
+      const result = await DocumentPicker.getDocumentAsync({
+        type: 'audio/*',
+        copyToCacheDirectory: true,
+        multiple: false,
       });
 
-      if (status.isLoaded && status.durationMillis) {
-        durationSeconds = status.durationMillis / 1000;
+      if (result.canceled || !result.assets?.length) {
+        return;
       }
 
-      await sound.unloadAsync();
-    } catch {
-      // La duración es opcional.
-      // El backend también puede devolverla después del análisis.
-    }
+      const asset = result.assets[0];
 
-    setPendingFile({
-      uri: asset.uri,
-      name: asset.name,
-      mimeType: asset.mimeType,
-      sizeBytes: asset.size ?? undefined,
-      durationSeconds,
-    });
+      let durationSeconds: number | undefined;
+
+      try {
+        const { sound, status } = await Audio.Sound.createAsync(
+          { uri: asset.uri },
+          { shouldPlay: false }
+        );
+
+        if (status.isLoaded && status.durationMillis) {
+          durationSeconds = status.durationMillis / 1000;
+        }
+
+        await sound.unloadAsync();
+      } catch {
+        // La duración es opcional.
+        // El backend también puede calcularla.
+      }
+
+      setPendingFile({
+        uri: asset.uri,
+        name: asset.name,
+        mimeType: asset.mimeType,
+        sizeBytes: asset.size ?? undefined,
+        durationSeconds,
+      });
+    } catch {
+      Alert.alert(
+        'No se pudo seleccionar el audio',
+        'Ocurrió un problema al abrir los archivos del dispositivo.'
+      );
+    }
   };
 
   const onAnalyze = async () => {
     if (!pendingFile) {
       Alert.alert(
         'Selecciona un audio',
-        'Debes subir una grabación antes de analizar.',
+        'Primero debes seleccionar un archivo de audio.'
       );
       return;
     }
@@ -126,11 +135,12 @@ export default function InicioScreen() {
 
       setCurrentAnalysis(data, pendingFile.name);
       resetUploadForm();
+
       router.push('/result');
-    } catch (err) {
+    } catch (error) {
       const message =
-        err instanceof ApiError
-          ? err.message
+        error instanceof ApiError
+          ? error.message
           : 'Ocurrió un error inesperado durante el análisis.';
 
       Alert.alert('No se pudo analizar el audio', message);
@@ -139,206 +149,465 @@ export default function InicioScreen() {
     }
   };
 
-  return (
-    <BackgroundMain>
-      <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <KeyboardAvoidingView
-        style={styles.keyboardContainer}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <ScrollView
-  style={styles.container}
-  contentContainerStyle={styles.content}
-  keyboardShouldPersistTaps="handled"
-  showsVerticalScrollIndicator={false}
->
-          <View style={styles.headerBlock}>
-            <Text style={styles.eyebrow}>
-              Guard<Text style={styles.eyebrowIA}>IA</Text>n
-            </Text>
+  const fileInformation = [
+    formatDuration(pendingFile?.durationSeconds),
+    formatBytes(pendingFile?.sizeBytes),
+  ]
+    .filter(Boolean)
+    .join(' · ');
 
-            <Text style={styles.title}>Analizar llamada</Text>
+  return (
+    <BackgroundAuth>
+      <ScrollView
+        style={styles.screen}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Nombre de la aplicación */}
+        <Text style={styles.brand}>
+          Guard<Text style={styles.brandIA}>IA</Text>n
+        </Text>
+
+        {/* Logo tomado desde assets/images/logo.png */}
+        <Image
+          source={require('@/assets/images/logo.png')}
+          style={styles.logo}
+        />
+
+        {/* Mensaje de bienvenida */}
+        <Text style={styles.welcome}>
+          Bienvenido,{' '}
+          <Text style={styles.userName}>{userName}</Text>
+        </Text>
+
+        <Text style={styles.description}>
+          Selecciona un audio para analizarlo con IA
+        </Text>
+
+        {/* Apartado para seleccionar audio */}
+        <Pressable
+          onPress={pickFile}
+          disabled={analyzing}
+          style={({ pressed }) => [
+            styles.uploadCard,
+            pressed && styles.uploadCardPressed,
+          ]}
+        >
+          <View style={styles.pinkRightBorder} />
+          <View style={styles.pinkBottomBorder} />
+
+          <View style={styles.audioCircle}>
+            <View style={styles.documentContainer}>
+              <Ionicons
+                name="document-outline"
+                size={112}
+                color={LIGHT_BLUE}
+              />
+
+              <View style={styles.waveform}>
+                {WAVE_HEIGHTS.map((height, index) => (
+                  <View
+                    key={index}
+                    style={[
+                      styles.waveBar,
+                      {
+                        height,
+                        opacity: index === 2 ? 1 : 0.85,
+                      },
+                    ]}
+                  />
+                ))}
+              </View>
+
+              <View style={styles.uploadIcon}>
+                <Ionicons
+                  name="arrow-up"
+                  size={38}
+                  color={LIGHT_BLUE}
+                />
+              </View>
+            </View>
           </View>
 
-          {pendingFile ? (
-            <FileCard
-              name={pendingFile.name}
-              durationLabel={formatDuration(
-                pendingFile.durationSeconds,
-              )}
-              sizeLabel={formatBytes(pendingFile.sizeBytes)}
-              onRemove={() => setPendingFile(null)}
-            />
-          ) : (
-            <UploadZone onPress={pickFile} />
-          )}
-
-          <Text style={styles.label}>
-            ¿Quién realiza la llamada?{' '}
-            <Text style={styles.optionalLabel}>(opcional)</Text>
+          <Text style={styles.uploadTitle}>
+            {pendingFile
+              ? 'Audio seleccionado'
+              : 'Seleccionar audio'}
           </Text>
 
-          <View style={styles.chipsRow}>
-            {CALLER_OPTIONS.map((option) => {
-              const active = callerType === option;
+          {pendingFile ? (
+            <>
+              <Text
+                style={styles.selectedFileName}
+                numberOfLines={1}
+              >
+                {pendingFile.name}
+              </Text>
 
-              return (
-                <Pressable
-                  key={option}
-                  onPress={() =>
-                    setCallerType(active ? null : option)
-                  }
-                  style={({ pressed }) => [
-                    styles.chip,
-                    active && styles.chipActive,
-                    pressed && styles.chipPressed,
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.chipText,
-                      active && styles.chipTextActive,
-                    ]}
-                  >
-                    {option}
-                  </Text>
-                </Pressable>
-              );
-            })}
+              {!!fileInformation && (
+                <Text style={styles.fileInformation}>
+                  {fileInformation}
+                </Text>
+              )}
+
+              <Text style={styles.changeFileText}>
+                Toca para cambiar el archivo
+              </Text>
+            </>
+          ) : (
+            <Text style={styles.formats}>
+              .mp3, .m4a, .wav, .aac
+            </Text>
+          )}
+        </Pressable>
+
+        {/* Botón que aparece después de seleccionar el audio */}
+        {pendingFile && (
+          <Pressable
+            onPress={onAnalyze}
+            disabled={analyzing}
+            style={({ pressed }) => [
+              styles.analyzeButton,
+              pressed && !analyzing && styles.analyzeButtonPressed,
+              analyzing && styles.analyzeButtonDisabled,
+            ]}
+          >
+            {analyzing ? (
+              <>
+                <ActivityIndicator
+                  size="small"
+                  color={WHITE}
+                />
+
+                <Text style={styles.analyzeButtonText}>
+                  Analizando audio...
+                </Text>
+              </>
+            ) : (
+              <>
+                <Ionicons
+                  name="sparkles-outline"
+                  size={21}
+                  color={WHITE}
+                />
+
+                <Text style={styles.analyzeButtonText}>
+                  Analizar audio
+                </Text>
+              </>
+            )}
+          </Pressable>
+        )}
+
+        {/* Mensaje de privacidad */}
+        <View style={styles.privacyCard}>
+          <View style={styles.privacyIconContainer}>
+            <Ionicons
+              name="shield-outline"
+              size={58}
+              color={BLUE}
+            />
+
+            <Ionicons
+              name="lock-closed-outline"
+              size={20}
+              color={LIGHT_BLUE}
+              style={styles.lockIcon}
+            />
           </View>
 
-          <Text style={styles.label}>Descripción</Text>
+          <View style={styles.privacyContent}>
+            <Text style={styles.privacyTitle}>
+              Tu privacidad es nuestra prioridad
+            </Text>
 
-          <TextInput
-            value={description}
-            onChangeText={setDescription}
-            placeholder="Agrega contexto sobre la llamada (opcional)"
-            placeholderTextColor="rgba(255,255,255,0.42)"
-            multiline
-            numberOfLines={4}
-            textAlignVertical="top"
-            style={styles.textArea}
-          />
-
-          <PrimaryButton
-            label={analyzing ? 'Analizando...' : 'Analizar audio'}
-            icon={analyzing ? undefined : 'sparkles-outline'}
-            loading={analyzing}
-            onPress={onAnalyze}
-            style={styles.analyzeButton}
-          />
-        </ScrollView>
-      </KeyboardAvoidingView>
-      </SafeAreaView>
-    </BackgroundMain>
+            <Text style={styles.privacyDescription}>
+              Tus audios se analizan de forma segura,
+              confidencial y sin compartir con terceros.
+            </Text>
+          </View>
+        </View>
+      </ScrollView>
+    </BackgroundAuth>
   );
 }
 
 const styles = StyleSheet.create({
-  keyboardContainer: {
+  screen: {
     flex: 1,
-  },
-safeArea: {
-  flex: 1,
-},
-  container: {
-    flex: 1,
-    backgroundColor: 'transparent',
   },
 
   content: {
-  paddingHorizontal: Spacing.xl,
-  paddingTop: 16,
-  paddingBottom: 10,
-},
-
-  headerBlock: {
-    marginBottom: Spacing.xl,
+    flexGrow: 1,
+    alignItems: 'center',
+    paddingHorizontal: 26,
+    paddingTop: 18,
+    paddingBottom: 28,
   },
 
-  eyebrow: {
-    fontSize: 21,
-    color: Colors.white,
-    letterSpacing: 0.8,
-    fontFamily: 'Sora_700Bold',
+  brand: {
+    fontSize: 28,
+    color: WHITE,
+    textAlign: 'center',
+    ...Type.display,
   },
 
-  eyebrowIA: {
-    color: '#E53935',
+  brandIA: {
+    color: PINK,
   },
 
-title: {
-  fontFamily: 'Sora_600SemiBold',
-  fontSize: 24,
-  lineHeight: 30,
-  color: Colors.white,
-  marginTop: 10,
-  marginBottom: 0,
-},
-  label: {
-    fontSize: 15,
-    color: Colors.white,
-    marginTop: Spacing.xl,
-    marginBottom: Spacing.sm,
-    ...Type.bodySemi,
+  logo: {
+    width: 72,
+    height: 72,
+    resizeMode: 'contain',
+    marginTop: 10,
   },
 
-  optionalLabel: {
-    color: 'rgba(255,255,255,0.58)',
+  welcome: {
+    marginTop: 13,
+    fontSize: 27,
+    lineHeight: 34,
+    color: WHITE,
+    textAlign: 'center',
+    ...Type.display,
+  },
+
+  userName: {
+    color: '#FFF4EA',
+  },
+
+  description: {
+    marginTop: 4,
+    marginBottom: 16,
+    fontSize: 14,
+    lineHeight: 20,
+    color: 'rgba(180,211,255,0.86)',
+    textAlign: 'center',
     ...Type.body,
   },
 
-  chipsRow: {
+  uploadCard: {
+    position: 'relative',
+    width: '100%',
+    minHeight: 312,
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    borderWidth: 1.5,
+    borderColor: BLUE,
+    borderRadius: 25,
+    backgroundColor: 'rgba(4,15,34,0.86)',
+  },
+
+  uploadCardPressed: {
+    opacity: 0.88,
+    transform: [{ scale: 0.99 }],
+  },
+
+  pinkRightBorder: {
+    position: 'absolute',
+    top: 22,
+    right: 0,
+    bottom: 22,
+    width: 1.5,
+    backgroundColor: PINK,
+  },
+
+  pinkBottomBorder: {
+    position: 'absolute',
+    right: 22,
+    bottom: 0,
+    left: 56,
+    height: 1.5,
+    backgroundColor: PINK,
+  },
+
+  audioCircle: {
+    width: 190,
+    height: 190,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: BLUE,
+    borderRadius: 95,
+    backgroundColor: 'rgba(4,18,43,0.88)',
+    shadowColor: BLUE,
+    shadowOffset: {
+      width: 0,
+      height: 7,
+    },
+    shadowOpacity: 0.28,
+    shadowRadius: 14,
+    elevation: 7,
+  },
+
+  documentContainer: {
+    width: 135,
+    height: 135,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  waveform: {
+    position: 'absolute',
+    top: 50,
+    left: 41,
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
+    alignItems: 'center',
+    gap: 5,
   },
 
-  chip: {
-    paddingVertical: 10,
-    paddingHorizontal: 17,
-    borderRadius: Radius.pill,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.18)',
-    backgroundColor: 'rgba(255,255,255,0.08)',
+  waveBar: {
+    width: 5,
+    borderRadius: 5,
+    backgroundColor: BLUE,
   },
 
-  chipActive: {
-    backgroundColor: 'rgba(229,57,53,0.22)',
-    borderColor: '#E53935',
+  uploadIcon: {
+    position: 'absolute',
+    right: 1,
+    bottom: 0,
+    width: 61,
+    height: 61,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: LIGHT_BLUE,
+    borderRadius: 31,
+    backgroundColor: '#06357B',
   },
 
-  chipPressed: {
-    opacity: 0.75,
+  uploadTitle: {
+    marginTop: 11,
+    fontSize: 22,
+    color: WHITE,
+    textAlign: 'center',
+    ...Type.display,
   },
 
-  chipText: {
-    fontSize: 13,
-    color: 'rgba(255,255,255,0.82)',
+  formats: {
+    marginTop: 7,
+    fontSize: 14,
+    color: 'rgba(175,198,230,0.74)',
+    textAlign: 'center',
+    ...Type.body,
+  },
+
+  selectedFileName: {
+    width: '90%',
+    marginTop: 7,
+    fontSize: 14,
+    color: LIGHT_BLUE,
+    textAlign: 'center',
     ...Type.bodyMedium,
   },
 
-  chipTextActive: {
-    color: Colors.white,
-    ...Type.bodySemi,
+  fileInformation: {
+    marginTop: 4,
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.65)',
+    textAlign: 'center',
+    ...Type.body,
   },
 
-  textArea: {
-    minHeight: 90,
-    backgroundColor: 'rgba(7,10,18,0.72)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.18)',
-    borderRadius: Radius.lg,
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    fontSize: 15,
-    lineHeight: 22,
-    color: Colors.white,
+  changeFileText: {
+    marginTop: 4,
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.5)',
+    textAlign: 'center',
     ...Type.body,
   },
 
   analyzeButton: {
-    marginTop: Spacing.lg,
-    marginBottom: 20,
+    width: '100%',
+    minHeight: 54,
+    marginTop: 14,
+    flexDirection: 'row',
+    gap: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 16,
+    backgroundColor: BLUE,
+    shadowColor: BLUE,
+    shadowOffset: {
+      width: 0,
+      height: 5,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+
+  analyzeButtonPressed: {
+    opacity: 0.86,
+    transform: [{ scale: 0.99 }],
+  },
+
+  analyzeButtonDisabled: {
+    opacity: 0.7,
+  },
+
+  analyzeButtonText: {
+    fontSize: 15,
+    color: WHITE,
+    ...Type.bodySemi,
+  },
+
+  privacyCard: {
+    width: '100%',
+    minHeight: 84,
+    marginTop: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+    borderWidth: 1,
+    borderColor: 'rgba(103,151,211,0.34)',
+    borderRadius: 16,
+    backgroundColor: 'rgba(4,18,36,0.82)',
+  },
+
+  privacyIconContainer: {
+    position: 'relative',
+    width: 65,
+    height: 65,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+    borderRadius: 33,
+    backgroundColor: 'rgba(15,86,170,0.13)',
+    shadowColor: BLUE,
+    shadowOffset: {
+      width: 0,
+      height: 0,
+    },
+    shadowOpacity: 0.65,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+
+  lockIcon: {
+    position: 'absolute',
+  },
+
+  privacyContent: {
+    flex: 1,
+  },
+
+  privacyTitle: {
+    fontSize: 13,
+    lineHeight: 18,
+    color: WHITE,
+    ...Type.bodySemi,
+  },
+
+  privacyDescription: {
+    marginTop: 4,
+    fontSize: 11,
+    lineHeight: 16,
+    color: 'rgba(188,213,247,0.8)',
+    ...Type.body,
   },
 });
