@@ -229,7 +229,7 @@ export default function InicioScreen() {
           <Text style={styles.uploadTitle}>
             {pendingFile
               ? 'Audio seleccionado'
-              : 'Seleccionar audio'}
+              : 'Selecciona un audio'}
           </Text>
 
           {pendingFile ? (
@@ -526,16 +526,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 16,
-    backgroundColor: BLUE,
-    shadowColor: BLUE,
+
+    backgroundColor: '#E53935',
+
+    shadowColor: '#E53935',
     shadowOffset: {
       width: 0,
       height: 5,
     },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.35,
     shadowRadius: 12,
-    elevation: 6,
-  },
+    elevation: 8,
+},
 
   analyzeButtonPressed: {
     opacity: 0.86,
