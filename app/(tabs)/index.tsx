@@ -234,15 +234,14 @@ const userName =
         </Text>
         {/* Mensaje de bienvenida */}
         <Text style={styles.welcome}>
-          Bienvenido{' '}
-          <Text style={styles.userName}>
-            {isLoaded ? userName : ''}
-          </Text>
-        </Text>
+  Bienvenido
+</Text>
 
-        <Text style={styles.description}>
-          Selecciona un audio para analizarlo con IA
-        </Text>
+<Text style={styles.userName}>
+  {isLoaded ? userName : ''}
+</Text>
+
+       
 
         {/* Apartado para seleccionar audio */}
 <Pressable
@@ -450,19 +449,19 @@ const styles = StyleSheet.create({
   welcome: {
   marginTop: 20,
   fontSize: 25,
-  lineHeight: 32,
   color: WHITE,
   textAlign: 'center',
   ...Type.display,
 },
 
-  userName: {
+userName: {
+  marginTop: 10,
   fontFamily: 'Sora_700Bold',
   fontSize: 24,
-  lineHeight: 31,
+  lineHeight: 30,
   color: '#FFF4EA',
+  textAlign: 'center',
 },
-
   description: {
     marginTop: 4,
     marginBottom: 16,
@@ -476,6 +475,7 @@ const styles = StyleSheet.create({
   uploadCard: {
     position: 'relative',
     width: '100%',
+    marginTop: 20,
     minHeight: 312,
     overflow: 'hidden',
     alignItems: 'center',
