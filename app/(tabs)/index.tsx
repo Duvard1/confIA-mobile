@@ -3,7 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Audio } from 'expo-av';
 import * as DocumentPicker from 'expo-document-picker';
 import { router } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   ActivityIndicator,
@@ -13,6 +13,7 @@ import {
   StyleSheet,
   Text,
   View,
+  Modal,
 } from 'react-native';
 
 import BackgroundAuth from '@/components/BackgroundMain';
@@ -26,6 +27,38 @@ const PINK = '#FF2D6F';
 const WHITE = '#FFFFFF';
 
 const WAVE_HEIGHTS = [18, 30, 43, 34, 23];
+const ANALYSIS_STAGES = [
+  {
+    title: 'Preparando el audio...',
+    subtitle: 'Validando formato y calidad de la grabación.',
+    icon: 'musical-notes-outline',
+    progress: 15,
+  },
+  {
+    title: 'Analizando biometría de voz...',
+    subtitle: 'Buscando señales de clonación o generación artificial.',
+    icon: 'mic-outline',
+    progress: 40,
+  },
+  {
+    title: 'Verificando ingeniería social...',
+    subtitle: 'Analizando el contenido y las intenciones de la llamada.',
+    icon: 'chatbubbles-outline',
+    progress: 65,
+  },
+  {
+    title: 'Evaluando propiedades físicas...',
+    subtitle: 'Procesando frecuencia, energía, silencios y variaciones.',
+    icon: 'analytics-outline',
+    progress: 85,
+  },
+  {
+    title: 'Calculando el nivel de riesgo...',
+    subtitle: 'Consolidando los resultados de todos los motores.',
+    icon: 'shield-checkmark-outline',
+    progress: 96,
+  },
+] as const;
 
 function formatBytes(bytes?: number) {
   if (!bytes) return '';
@@ -63,8 +96,29 @@ export default function InicioScreen() {
   } = useAnalysisStore();
 
   const [analyzing, setAnalyzing] = useState(false);
+const [analysisStage, setAnalysisStage] = useState(0);
 
-  const userName =
+useEffect(() => {
+  if (!analyzing) {
+    setAnalysisStage(0);
+    return;
+  }
+
+  const timers = [
+    setTimeout(() => setAnalysisStage(1), 1200),
+    setTimeout(() => setAnalysisStage(2), 3200),
+    setTimeout(() => setAnalysisStage(3), 5600),
+    setTimeout(() => setAnalysisStage(4), 8000),
+  ];
+
+  return () => {
+    timers.forEach((timer) => clearTimeout(timer));
+  };
+}, [analyzing]);
+
+const currentStage = ANALYSIS_STAGES[analysisStage];
+
+const userName =
   user?.fullName ||
   user?.firstName ||
   user?.username ||
@@ -163,8 +217,11 @@ export default function InicioScreen() {
     .join(' · ');
 
   return (
-    <BackgroundAuth>
-      <SafeAreaView style={styles.safeArea} edges={['top']}></SafeAreaView>
+  <BackgroundAuth>
+    <SafeAreaView
+      style={styles.safeArea}
+      edges={['top']}
+    >
       <ScrollView
         style={styles.screen}
         contentContainerStyle={styles.content}
@@ -329,6 +386,7 @@ export default function InicioScreen() {
           </View>
         </View>
       </ScrollView>
+      </SafeAreaView>
     </BackgroundAuth>
   );
 }
@@ -457,7 +515,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 5,
   },
-
+safeArea: {
+  flex: 1,
+},
   waveBar: {
     width: 5,
     borderRadius: 5,
@@ -549,8 +609,9 @@ const styles = StyleSheet.create({
   },
 
   analyzeButtonDisabled: {
-    opacity: 0.7,
-  },
+  opacity: 0.68,
+  shadowOpacity: 0.12,
+},
 
   analyzeButtonText: {
     fontSize: 15,
