@@ -13,11 +13,10 @@ import {
   StyleSheet,
   Text,
   View,
-  Modal,
 } from 'react-native';
 
 import BackgroundAuth from '@/components/BackgroundMain';
-import { Type } from '@/constants/theme';
+import { Colors, Type } from '@/constants/theme';
 import { analyzeCall, ApiError } from '@/services/api';
 import { useAnalysisStore } from '@/store/useAnalysisStore';
 
@@ -246,116 +245,147 @@ const userName =
         </Text>
 
         {/* Apartado para seleccionar audio */}
-        <Pressable
-          onPress={pickFile}
-          disabled={analyzing}
-          style={({ pressed }) => [
-            styles.uploadCard,
-            pressed && styles.uploadCardPressed,
+<Pressable
+  onPress={pickFile}
+  disabled={analyzing}
+  style={({ pressed }) => [
+    styles.uploadCard,
+    pressed && !analyzing && styles.uploadCardPressed,
+  ]}
+>
+  {analyzing ? (
+    <View style={styles.inlineLoading}>
+      <View style={styles.loadingIconContainer}>
+        <Ionicons
+  name={currentStage.icon}
+  size={38}
+  color={Colors.white}
+/>
+      </View>
+
+      <Text style={styles.inlineLoadingTitle}>
+        Analizando audio
+      </Text>
+
+      <Text style={styles.loadingStageTitle}>
+        {currentStage.title}
+      </Text>
+
+      <Text style={styles.loadingSubtitle}>
+        {currentStage.subtitle}
+      </Text>
+
+      <View style={styles.progressTrack}>
+        <View
+          style={[
+            styles.progressFill,
+            {
+              width: `${currentStage.progress}%`,
+            },
           ]}
-        >
-          <View style={styles.audioCircle}>
-            <View style={styles.documentContainer}>
-              <Ionicons
-                name="document-outline"
-                size={112}
-                color={LIGHT_BLUE}
+        />
+      </View>
+
+      <Text style={styles.progressText}>
+        {currentStage.progress}%
+      </Text>
+
+      <ActivityIndicator
+        size="large"
+        color="#FF2D55"
+        style={styles.loadingSpinner}
+      />
+    </View>
+  ) : (
+    <>
+      <View style={styles.audioCircle}>
+        <View style={styles.documentContainer}>
+          <Ionicons
+            name="document-outline"
+            size={112}
+            color={LIGHT_BLUE}
+          />
+
+          <View style={styles.waveform}>
+            {WAVE_HEIGHTS.map((height, index) => (
+              <View
+                key={index}
+                style={[
+                  styles.waveBar,
+                  {
+                    height,
+                    opacity: index === 2 ? 1 : 0.85,
+                  },
+                ]}
               />
-
-              <View style={styles.waveform}>
-                {WAVE_HEIGHTS.map((height, index) => (
-                  <View
-                    key={index}
-                    style={[
-                      styles.waveBar,
-                      {
-                        height,
-                        opacity: index === 2 ? 1 : 0.85,
-                      },
-                    ]}
-                  />
-                ))}
-              </View>
-
-              <View style={styles.uploadIcon}>
-                <Ionicons
-                  name="arrow-up"
-                  size={38}
-                  color={LIGHT_BLUE}
-                />
-              </View>
-            </View>
+            ))}
           </View>
 
-          <Text style={styles.uploadTitle}>
-            {pendingFile
-              ? 'Audio seleccionado'
-              : 'Selecciona un audio'}
+          <View style={styles.uploadIcon}>
+            <Ionicons
+              name="arrow-up"
+              size={38}
+              color={LIGHT_BLUE}
+            />
+          </View>
+        </View>
+      </View>
+
+      <Text style={styles.uploadTitle}>
+        {pendingFile
+          ? 'Audio seleccionado'
+          : 'Selecciona un audio'}
+      </Text>
+
+      {pendingFile ? (
+        <>
+          <Text
+            style={styles.selectedFileName}
+            numberOfLines={1}
+          >
+            {pendingFile.name}
           </Text>
 
-          {pendingFile ? (
-            <>
-              <Text
-                style={styles.selectedFileName}
-                numberOfLines={1}
-              >
-                {pendingFile.name}
-              </Text>
-
-              {!!fileInformation && (
-                <Text style={styles.fileInformation}>
-                  {fileInformation}
-                </Text>
-              )}
-
-              <Text style={styles.changeFileText}>
-                Toca para cambiar el archivo
-              </Text>
-            </>
-          ) : (
-            <Text style={styles.formats}>
-              .mp3, .m4a, .wav, .aac
+          {!!fileInformation && (
+            <Text style={styles.fileInformation}>
+              {fileInformation}
             </Text>
           )}
-        </Pressable>
 
-        {/* Botón que aparece después de seleccionar el audio */}
-        {pendingFile && (
-          <Pressable
-            onPress={onAnalyze}
-            disabled={analyzing}
-            style={({ pressed }) => [
-              styles.analyzeButton,
-              pressed && !analyzing && styles.analyzeButtonPressed,
-              analyzing && styles.analyzeButtonDisabled,
-            ]}
-          >
-            {analyzing ? (
-              <>
-                <ActivityIndicator
-                  size="small"
-                  color={WHITE}
-                />
+          <Text style={styles.changeFileText}>
+            Toca para cambiar el archivo
+          </Text>
+        </>
+      ) : (
+        <Text style={styles.formats}>
+          .mp3, .m4a, .wav, .aac
+        </Text>
+      )}
+    </>
+  )}
+</Pressable>
 
-                <Text style={styles.analyzeButtonText}>
-                  Analizando audio...
-                </Text>
-              </>
-            ) : (
-              <>
-                <Ionicons
-                  name="sparkles-outline"
-                  size={21}
-                  color={WHITE}
-                />
+{/* Botón para iniciar el análisis */}
+{pendingFile && !analyzing && (
+  <Pressable
+    onPress={onAnalyze}
+    style={({ pressed }) => [
+      styles.analyzeButton,
+      pressed && styles.analyzeButtonPressed,
+    ]}
+  >
+    <Ionicons
+      name="sparkles-outline"
+      size={21}
+      color={WHITE}
+    />
 
-                <Text style={styles.analyzeButtonText}>
-                  Analizar audio
-                </Text>
-              </>
-            )}
-          </Pressable>
-        )}
+    <Text style={styles.analyzeButtonText}>
+      Analizar audio
+    </Text>
+  </Pressable>
+)}
+
 
         {/* Mensaje de privacidad */}
         <View style={styles.privacyCard}>
@@ -386,8 +416,8 @@ const userName =
           </View>
         </View>
       </ScrollView>
-      </SafeAreaView>
-    </BackgroundAuth>
+    </SafeAreaView>
+  </BackgroundAuth>
   );
 }
 
@@ -400,7 +430,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     alignItems: 'center',
     paddingHorizontal: 26,
-    paddingTop: 42,
+    paddingTop: 10,
     paddingBottom: 28,
   },
 
@@ -674,4 +704,66 @@ safeArea: {
     color: 'rgba(188,213,247,0.8)',
     ...Type.body,
   },
+loadingIconContainer: {
+  width: 70,
+  height: 70,
+  alignItems: 'center',
+  justifyContent: 'center',
+  borderWidth: 1,
+  borderColor: 'rgba(255,45,85,0.55)',
+  borderRadius: 35,
+  backgroundColor: 'rgba(255,45,85,0.10)',
+},
+
+loadingStageTitle: {
+  marginTop: 18,
+  fontFamily: 'Sora_600SemiBold',
+  fontSize: 16,
+  lineHeight: 23,
+  color: Colors.white,
+  textAlign: 'center',
+},
+
+loadingSubtitle: {
+  marginTop: 8,
+  fontFamily: 'Sora_400Regular',
+  fontSize: 13,
+  lineHeight: 20,
+  color: 'rgba(255,255,255,0.68)',
+  textAlign: 'center',
+},
+
+progressTrack: {
+  width: '100%',
+  height: 8,
+  marginTop: 18,
+  overflow: 'hidden',
+  borderRadius: 4,
+  backgroundColor: 'rgba(255,255,255,0.12)',
+},
+
+progressFill: {
+  height: '100%',
+  borderRadius: 4,
+  backgroundColor: '#FF2D55',
+},
+
+progressText: {
+  marginTop: 8,
+  fontFamily: 'Sora_600SemiBold',
+  fontSize: 13,
+  color: WHITE,
+},
+
+loadingSpinner: {
+  marginTop: 14,
+},
+
+inlineLoading: {
+  width: '100%',
+  alignItems: 'center',
+  justifyContent: 'center',
+  paddingHorizontal: 12,
+  paddingVertical: 10,
+},
 });
