@@ -12,6 +12,7 @@ import { router } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import React, { useCallback, useEffect } from 'react';
 import { Alert, StyleSheet, Text, View } from 'react-native';
+import { getClerkRedirectUrls } from '@/utils/clerk-auth';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -19,7 +20,8 @@ const CLERK_ENABLED = !!process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
 export default function LoginScreen() {
   const { isSignedIn, isLoaded } = useAuth();
-  const { startOAuthFlow } = useOAuth({ strategy: 'oauth_google' });
+  const { redirectUrl } = getClerkRedirectUrls();
+  const { startOAuthFlow } = useOAuth({ strategy: 'oauth_google', redirectUrl });
 
   useEffect(() => {
     if (isLoaded && isSignedIn) {

@@ -11,6 +11,7 @@ import { useAuth, useSignIn, useSignUp } from '@clerk/clerk-expo';
 import Logo from '@/components/Logo';
 import { PrimaryButton, SecondaryButton } from '@/components/Buttons';
 import { Colors, Spacing, Type } from '@/constants/theme';
+import { getClerkRedirectUrls } from '@/utils/clerk-auth';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -20,6 +21,7 @@ export default function LoginScreen() {
   const { isSignedIn, isLoaded: authLoaded } = useAuth();
   const { signIn, isLoaded: signInLoaded } = useSignIn();
   const { signUp, isLoaded: signUpLoaded } = useSignUp();
+  const { redirectUrl, redirectUrlComplete } = getClerkRedirectUrls();
 
   useEffect(() => {
     if (authLoaded && isSignedIn) {
@@ -43,8 +45,8 @@ export default function LoginScreen() {
     try {
       await signIn.authenticateWithRedirect({
         strategy: 'oauth_google',
-        redirectUrl: `${window.location.origin}/sso-callback`,
-        redirectUrlComplete: `${window.location.origin}/(tabs)`,
+        redirectUrl,
+        redirectUrlComplete,
       });
     } catch (err: any) {
       const isNotFound = err?.errors?.some(
@@ -54,8 +56,8 @@ export default function LoginScreen() {
         try {
           await signUp.authenticateWithRedirect({
             strategy: 'oauth_google',
-            redirectUrl: `${window.location.origin}/sso-callback`,
-            redirectUrlComplete: `${window.location.origin}/(tabs)`,
+            redirectUrl,
+            redirectUrlComplete,
           });
           return;
         } catch (signUpErr: any) {

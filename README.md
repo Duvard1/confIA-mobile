@@ -100,10 +100,28 @@ Para iniciar el servidor de desarrollo de Metro, ejecuta:
 npx expo start -c
 ```
 
+Si quieres abrir la app desde otra red o desde un dispositivo fuera de tu LAN, usa el túnel manual con ngrok:
+
+```bash
+npm run start:tunnel
+```
+
+Ese comando levanta ngrok sobre Metro y luego arranca Expo usando la URL pública generada, así evitas el timeout del túnel integrado de Expo.
+
+### Configuración lista para Clerk y backend
+
+- El login web ya usa el origen actual de la app, así que cuando abras el proyecto por ngrok tomará la URL pública automáticamente.
+- En Clerk, registra como redirect URIs la ruta pública `.../sso-callback` y, si quieres volver directo al panel, también `.../(tabs)` para ese mismo origen público.
+- El backend debe responder desde la URL que tengas en `EXPO_PUBLIC_API_URL`; si también lo expones con un túnel, asegúrate de permitir ese mismo origen en CORS.
+- Desde esta app no es posible actualizar el dashboard de Clerk automáticamente; lo que sí queda preparado es que la app construye los redirects correctos según la URL con la que abras el proyecto.
+
 ### Controles de Metro:
 - **`a`**: Ejecuta la aplicación en un emulador o dispositivo Android conectado.
 - **`w`**: Abre la aplicación en tu navegador web local (`http://localhost:8081`).
 - **Escaneo QR**: Escanea el código QR que se muestra en la terminal usando la aplicación móvil **Expo Go** (Android/iOS) para probar en un celular físico.
+
+### Nota para Clerk
+Si usas el túnel para el login web, revisa en Clerk los redirect URIs autorizados y agrega la URL pública que te entregue ngrok para el callback de autenticación.
 
 ---
 
