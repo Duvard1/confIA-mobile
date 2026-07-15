@@ -302,13 +302,13 @@ export default function InicioScreen() {
             <Ionicons
               name="shield-outline"
               size={58}
-              color={BLUE}
+              color="#FF2D55"
             />
 
             <Ionicons
               name="lock-closed-outline"
               size={20}
-              color={LIGHT_BLUE}
+              color="#FF2D55"
               style={styles.lockIcon}
             />
           </View>
@@ -343,28 +343,33 @@ const styles = StyleSheet.create({
   },
 
   brand: {
-    fontSize: 28,
-    color: WHITE,
-    textAlign: 'center',
-    ...Type.display,
-  },
+  alignSelf: 'flex-start',
+  marginLeft: 2,
+  fontSize: 28,
+  color: WHITE,
+  textAlign: 'left',
+  ...Type.display,
+},
 
   brandIA: {
-    color: PINK,
-  },
+  color: '#FF2D55',
+},
 
   welcome: {
-    marginTop: 1,
-    fontSize: 28,
-    lineHeight: 34,
-    color: WHITE,
-    textAlign: 'center',
-    ...Type.display,
-  },
+  marginTop: 20,
+  fontSize: 25,
+  lineHeight: 32,
+  color: WHITE,
+  textAlign: 'center',
+  ...Type.display,
+},
 
   userName: {
-    color: '#FFF4EA',
-  },
+  fontFamily: 'Sora_700Bold',
+  fontSize: 24,
+  lineHeight: 31,
+  color: '#FFF4EA',
+},
 
   description: {
     marginTop: 4,
@@ -402,7 +407,7 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 22,
     width: 1.5,
-    backgroundColor: BLUE,
+    backgroundColor: '#FF2D55',
   },
 
   pinkBottomBorder: {
