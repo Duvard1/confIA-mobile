@@ -4,6 +4,7 @@ import { Audio } from 'expo-av';
 import * as DocumentPicker from 'expo-document-picker';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   ActivityIndicator,
   Alert,
@@ -163,10 +164,13 @@ export default function InicioScreen() {
 
   return (
     <BackgroundAuth>
+      <SafeAreaView style={styles.safeArea} edges={['top']}></SafeAreaView>
       <ScrollView
         style={styles.screen}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
+        bounces={false}
+        overScrollMode="never"
       >
         {/* Nombre de la aplicación */}
         <Text style={styles.brand}>
