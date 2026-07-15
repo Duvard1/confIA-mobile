@@ -7,7 +7,6 @@ import React, { useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  Image,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -15,7 +14,7 @@ import {
   View,
 } from 'react-native';
 
-import BackgroundAuth from '@/components/BackgroundAuth';
+import BackgroundAuth from '@/components/BackgroundMain';
 import { Type } from '@/constants/theme';
 import { analyzeCall, ApiError } from '@/services/api';
 import { useAnalysisStore } from '@/store/useAnalysisStore';
@@ -173,16 +172,9 @@ export default function InicioScreen() {
         <Text style={styles.brand}>
           Guard<Text style={styles.brandIA}>IA</Text>n
         </Text>
-
-        {/* Logo tomado desde assets/images/logo.png */}
-        <Image
-          source={require('@/assets/images/logo.png')}
-          style={styles.logo}
-        />
-
         {/* Mensaje de bienvenida */}
         <Text style={styles.welcome}>
-          Bienvenido,{' '}
+          Bienvenido{' '}
           <Text style={styles.userName}>
             {isLoaded ? userName : ''}
           </Text>
@@ -201,9 +193,6 @@ export default function InicioScreen() {
             pressed && styles.uploadCardPressed,
           ]}
         >
-          <View style={styles.pinkRightBorder} />
-          <View style={styles.pinkBottomBorder} />
-
           <View style={styles.audioCircle}>
             <View style={styles.documentContainer}>
               <Ionicons
@@ -349,7 +338,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     alignItems: 'center',
     paddingHorizontal: 26,
-    paddingTop: 18,
+    paddingTop: 42,
     paddingBottom: 28,
   },
 
@@ -364,16 +353,9 @@ const styles = StyleSheet.create({
     color: PINK,
   },
 
-  logo: {
-    width: 72,
-    height: 72,
-    resizeMode: 'contain',
-    marginTop: 10,
-  },
-
   welcome: {
-    marginTop: 13,
-    fontSize: 27,
+    marginTop: 1,
+    fontSize: 28,
     lineHeight: 34,
     color: WHITE,
     textAlign: 'center',
@@ -387,9 +369,9 @@ const styles = StyleSheet.create({
   description: {
     marginTop: 4,
     marginBottom: 16,
-    fontSize: 14,
+    fontSize: 15,
     lineHeight: 20,
-    color: 'rgba(180,211,255,0.86)',
+    color: '#FFF4EA',
     textAlign: 'center',
     ...Type.body,
   },
@@ -406,7 +388,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: BLUE,
     borderRadius: 25,
-    backgroundColor: 'rgba(4,15,34,0.86)',
+    backgroundColor: 'rgba(8,12,20,0.45)',
   },
 
   uploadCardPressed: {
@@ -420,7 +402,7 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 22,
     width: 1.5,
-    backgroundColor: PINK,
+    backgroundColor: BLUE,
   },
 
   pinkBottomBorder: {
@@ -429,7 +411,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 56,
     height: 1.5,
-    backgroundColor: PINK,
+    backgroundColor: BLUE,
   },
 
   audioCircle: {
@@ -487,21 +469,23 @@ const styles = StyleSheet.create({
     backgroundColor: '#06357B',
   },
 
-  uploadTitle: {
-    marginTop: 11,
-    fontSize: 22,
-    color: WHITE,
-    textAlign: 'center',
-    ...Type.display,
-  },
+ uploadTitle: {
+  marginTop: 10,
+  fontFamily: 'Sora_700Bold',
+  fontSize: 22,
+  lineHeight: 30,
+  color: WHITE,
+  textAlign: 'center',
+},
 
   formats: {
-    marginTop: 7,
-    fontSize: 14,
-    color: 'rgba(175,198,230,0.74)',
-    textAlign: 'center',
-    ...Type.body,
-  },
+  marginTop: 7,
+  fontFamily: 'Sora_400Regular',
+  fontSize: 14,
+  lineHeight: 20,
+  color: 'rgba(175,198,230,0.74)',
+  textAlign: 'center',
+},
 
   selectedFileName: {
     width: '90%',
